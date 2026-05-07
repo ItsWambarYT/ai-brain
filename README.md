@@ -126,7 +126,7 @@ Generated from the same detected stack — not a generic template:
 When auto-detection finds limited data (new machine, empty home dir), ai-brain runs a 5-question interview instead of giving you a blank vault:
 
 ```
-? Your name: Andrew
+? Your name: Alex Chen
 ? Your role: Full-Stack Developer
 ? Primary languages: [x] TypeScript  [x] Python
 ? Frameworks you use: [x] Next.js  [x] FastAPI  [x] Tailwind CSS
