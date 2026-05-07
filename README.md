@@ -16,44 +16,13 @@ npx ai-brain
 
 Works with **Claude Code · Gemini CLI · Cursor · Windsurf · GitHub Copilot · Cline · Aider · Continue · Codex CLI**
 
+![ai-brain demo — one command to set up persistent memory for every AI coding agent](assets/demo.gif)
+
 ---
 
 ## The Problem
 
 Your AI coding agents start every session with zero memory. They don't know your stack, your conventions, which projects you're working on, or what you did last week. The more agents you use, the worse it gets — each one is a blank slate every time.
-
-## What ai-brain Does
-
-```
-$ npx ai-brain
-
-  ai-brain v1.0.0
-
-Project:  /Users/me/my-saas-app
-
-✔ Found 4 projects · Claude Code, Cursor, Gemini CLI
-✔ Detected: Next.js App
-
-✔ CLAUDE.md
-✔ Brain vault: /Users/me/AgentBrain
-  Personalized with 4 projects, 5 skill notes
-✔ ~/.claude/CLAUDE.md → wired to brain
-✔ Registered in Obsidian
-✔ ~/.gemini/GEMINI.md
-✔ AGENTS.md
-✔ .cursorrules
-✔ .windsurfrules
-✔ .github/copilot-instructions.md
-✔ .clinerules
-✔ .aider.conf.yml
-
-All done!
-
-Next steps:
-  1. Open Obsidian → "Open folder as vault" → /Users/me/AgentBrain
-  2. Edit /Users/me/AgentBrain/Me.md — tell your agents who you are
-  3. Start a new AI session — all agents now read your brain automatically
-```
 
 ---
 
