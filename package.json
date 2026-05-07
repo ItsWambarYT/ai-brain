@@ -1,0 +1,64 @@
+{
+  "name": "ai-brain",
+  "version": "1.0.0",
+  "description": "Give every AI coding agent a persistent, personalized brain — auto-built from your git repos, Claude history, and project stack. One command.",
+  "keywords": [
+    "ai",
+    "ai-brain",
+    "agent-brain",
+    "agents",
+    "memory",
+    "claude",
+    "claude-code",
+    "gemini",
+    "cursor",
+    "windsurf",
+    "copilot",
+    "cline",
+    "aider",
+    "obsidian",
+    "brain",
+    "vault",
+    "context",
+    "CLAUDE.md",
+    "AGENTS.md",
+    "cursorrules",
+    "windsurfrules",
+    "brain-vault",
+    "agent-memory",
+    "ai-memory"
+  ],
+  "homepage": "https://github.com/ItsWambarYT/ai-brain#readme",
+  "bugs": {
+    "url": "https://github.com/ItsWambarYT/ai-brain/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ItsWambarYT/ai-brain.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "ai-brain": "./bin/ai-brain.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "dev": "node bin/ai-brain.js",
+    "test": "node --test src/__tests__/"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0",
+    "ora": "^8.1.1",
+    "inquirer": "^10.2.2",
+    "fast-glob": "^3.3.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
