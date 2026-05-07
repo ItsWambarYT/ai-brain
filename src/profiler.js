@@ -20,7 +20,7 @@ const HOME = homedir();
  * @typedef {Object} ProjectInfo
  * @property {string} name
  * @property {string} path
- * @property {string} template       - detected aivault template key
+ * @property {string} template       - detected ai-brain template key
  * @property {string} label          - human-readable stack label
  * @property {string[]} signals      - detected dep signals
  * @property {string} lastActive     - ISO date string

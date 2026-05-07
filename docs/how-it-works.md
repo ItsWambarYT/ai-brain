@@ -1,8 +1,8 @@
-# How claude-vault Works
+# How ai-brain Works
 
 ## Overview
 
-`claude-vault` does three things in one command:
+`ai-brain` does three things in one command:
 
 1. **Scans your project** — detects the framework, language, tools, and package manager
 2. **Generates a tailored `CLAUDE.md`** — a real, opinionated instruction file Claude Code reads on every session start

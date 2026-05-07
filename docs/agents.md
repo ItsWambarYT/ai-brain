@@ -1,6 +1,6 @@
 # Agent Support
 
-claude-vault generates config files for every major AI coding agent, all pointing to the same brain vault.
+ai-brain generates config files for every major AI coding agent, all pointing to the same brain vault.
 
 ## Supported Agents
 
@@ -47,7 +47,7 @@ Both get wired. The global file ensures Claude always reads the brain vault. The
 
 ### Gemini CLI
 
-Reads `~/.gemini/GEMINI.md` globally on every session start. claude-vault creates this file with the brain-reading instruction and behavior rules. Gemini CLI was confirmed to read this file on each invocation.
+Reads `~/.gemini/GEMINI.md` globally on every session start. ai-brain creates this file with the brain-reading instruction and behavior rules. Gemini CLI was confirmed to read this file on each invocation.
 
 ### Cursor
 
@@ -78,7 +78,7 @@ Reads `~/.continue/config.md` globally. Gets the brain-reading snippet so Contin
 If you use an agent not listed here, you can adapt the setup:
 
 1. Find out what file your agent reads for system context
-2. Run `claude-vault generate --dry-run` to see the generated CLAUDE.md content
+2. Run `ai-brain generate --dry-run` to see the generated CLAUDE.md content
 3. Copy that content into your agent's config file
 4. Add the brain vault snippet from `~/.claude/CLAUDE.md` to the top
 

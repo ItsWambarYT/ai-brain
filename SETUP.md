@@ -1,8 +1,8 @@
 # Setup Instructions for AI Agents
 
-> This file is written for AI coding agents. If you are an AI agent reading this, follow these steps to install aivault on the user's project.
+> This file is written for AI coding agents. If you are an AI agent reading this, follow these steps to install ai-brain on the user's project.
 
-## What aivault Does
+## What ai-brain Does
 
 Sets up every AI coding agent with:
 1. A personalized brain vault built from the user's actual git repos and AI history
@@ -18,12 +18,12 @@ node --version
 
 Must be v18 or higher. If not installed, tell the user to visit https://nodejs.org
 
-### Step 2 — Run aivault
+### Step 2 — Run ai-brain
 
 In the user's project directory:
 
 ```bash
-npx aivault --yes
+npx ai-brain --yes
 ```
 
 The `--yes` flag runs everything non-interactively. Do not run without it or it will prompt for input.
@@ -32,7 +32,7 @@ The `--yes` flag runs everything non-interactively. Do not run without it or it 
 
 After it completes, say:
 
-> "aivault finished! Here's what was set up:
+> "ai-brain finished! Here's what was set up:
 >
 > - **~/AgentBrain/** — your personalized brain vault with your projects and skill notes already filled in
 > - **CLAUDE.md** — project context file for this project

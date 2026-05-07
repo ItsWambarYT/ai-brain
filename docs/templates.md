@@ -1,6 +1,6 @@
 # CLAUDE.md Templates
 
-claude-vault ships 8 hand-tuned templates. Each one contains real, opinionated rules for that stack — not generic advice.
+ai-brain ships 8 hand-tuned templates. Each one contains real, opinionated rules for that stack — not generic advice.
 
 ## nextjs
 
