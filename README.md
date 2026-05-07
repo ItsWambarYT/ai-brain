@@ -1,6 +1,14 @@
 # ai-brain
 
+[![npm version](https://img.shields.io/npm/v/ai-brain?color=blue&label=npm)](https://www.npmjs.com/package/ai-brain)
+[![npm downloads](https://img.shields.io/npm/dm/ai-brain?color=green)](https://www.npmjs.com/package/ai-brain)
+[![Node.js](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
+[![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/ItsWambarYT/ai-brain?style=social)](https://github.com/ItsWambarYT/ai-brain/stargazers)
+
 > **Give every AI coding agent a persistent, personalized brain — built from your real projects and history. One command.**
+
+**⭐ If this saves you time, star the repo — it helps others find it.**
 
 ```bash
 npx ai-brain
@@ -266,7 +274,7 @@ Works on macOS, Linux, and Windows.
 
 ## Contributing
 
-PRs welcome.
+PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Add a project template:**
 1. `src/templates/myframework.md` with `{{PROJECT_NAME}}`, `{{PACKAGE_MANAGER}}`, `{{EXTRA_STACK}}`
@@ -284,3 +292,12 @@ PRs welcome.
 ## License
 
 MIT
+
+---
+
+<div align="center">
+
+**Found ai-brain useful?**<br>
+[⭐ Star it on GitHub](https://github.com/ItsWambarYT/ai-brain) · [🐛 Report a bug](https://github.com/ItsWambarYT/ai-brain/issues/new?template=bug_report.md) · [💡 Request a feature](https://github.com/ItsWambarYT/ai-brain/issues/new?template=feature_request.md)
+
+</div>
