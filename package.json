@@ -34,12 +34,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ItsWambarYT/ai-brain.git"
+    "url": "git+https://github.com/ItsWambarYT/ai-brain.git"
   },
   "license": "MIT",
   "type": "module",
   "bin": {
-    "ai-brain": "./bin/ai-brain.js"
+    "ai-brain": "bin/ai-brain.js"
   },
   "files": [
     "bin/",
