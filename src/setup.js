@@ -1,7 +1,6 @@
 // @ts-check
 import { existsSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
-import { homedir } from 'os';
 import chalk from 'chalk';
 import ora from 'ora';
 import { input, confirm, select } from '@inquirer/prompts';
@@ -45,7 +44,7 @@ export async function runSetup(opts = {}) {
           ? chalk.green(profile.aiTools.join(', '))
           : chalk.gray('no AI tools detected')),
     );
-  } catch (err) {
+  } catch {
     profileSpinner.warn('Could not scan profile — using defaults');
     profile = {
       projects: [],

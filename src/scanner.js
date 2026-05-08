@@ -34,8 +34,6 @@ export async function scan(dir) {
   const requirementsTxt = existsSync(join(dir, 'requirements.txt'));
   const goMod = existsSync(join(dir, 'go.mod'));
   const cargoToml = existsSync(join(dir, 'Cargo.toml'));
-  const gemfile = existsSync(join(dir, 'Gemfile'));
-  const composerJson = existsSync(join(dir, 'composer.json'));
   const tsconfig = existsSync(join(dir, 'tsconfig.json'));
   const dockerFile = existsSync(join(dir, 'Dockerfile'));
 

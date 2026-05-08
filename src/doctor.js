@@ -222,7 +222,7 @@ export function diagnose(opts = {}) {
   if (existsSync(REGISTRY_PATH)) {
     try {
       JSON.parse(readFileSync(REGISTRY_PATH, 'utf8'));
-    } catch (e) {
+    } catch {
       checks.push({
         level: 'error',
         title: `Custom agent registry has invalid JSON`,

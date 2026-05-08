@@ -8,11 +8,10 @@
  * and memory/summary files. Never reads source code content.
  */
 
-import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
-import { join, basename, extname, resolve } from 'path';
+import { existsSync, readdirSync, readFileSync } from 'fs';
+import { join, basename } from 'path';
 import { homedir } from 'os';
 import { execSync, execFileSync } from 'child_process';
-import fg from 'fast-glob';
 
 const HOME = homedir();
 
