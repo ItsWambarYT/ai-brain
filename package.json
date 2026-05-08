@@ -50,7 +50,7 @@
   ],
   "scripts": {
     "dev": "node bin/ai-brain.js",
-    "test": "node --test \"src/__tests__/**/*.test.js\"",
+    "test": "node --test src/__tests__/*.test.js",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
