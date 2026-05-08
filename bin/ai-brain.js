@@ -63,7 +63,7 @@ program
   .option('--dry-run', 'Preview output without writing')
   .option(
     '--template <name>',
-    'Force a template: nextjs | react-vite | python-fastapi | python-data | node-cli | typescript-lib | go | generic',
+    'Force a template: see src/templates/ for the current list (e.g. nextjs, react-vite, python-fastapi, rust, go, generic)',
   )
   .action(async (path, opts) => {
     await runGenerate(path || process.cwd(), opts);
@@ -172,5 +172,14 @@ program
       process.exitCode = 1;
     }
   });
+
+// Surface thrown errors with a clear message + non-zero exit instead of
+// the noisy stack trace commander prints by default.
+process.on('unhandledRejection', (err) => {
+  const msg = err instanceof Error ? err.message : String(err);
+  console.error(chalk.red('\n✗ ' + msg));
+  if (process.env.AI_BRAIN_DEBUG) console.error(err);
+  process.exit(1);
+});
 
 program.parse();

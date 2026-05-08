@@ -678,9 +678,17 @@ export function registerInObsidian(vaultPath) {
   }
 }
 
+/** Expand a leading `~` to the user's home dir before resolve(). */
+function expandHome(p) {
+  if (typeof p !== 'string' || !p) return p;
+  if (p === '~') return homedir();
+  if (p.startsWith('~/') || p.startsWith('~\\')) return join(homedir(), p.slice(2));
+  return p;
+}
+
 /** @param {{ path?: string, name?: string, register?: boolean }} opts */
 export async function runBrain(opts = {}) {
-  const vaultPath = resolve(opts.path || defaultBrainPath());
+  const vaultPath = resolve(expandHome(opts.path) || defaultBrainPath());
   const already = existsSync(join(vaultPath, 'Home.md'));
   console.log(chalk.gray(`Brain vault: ${vaultPath}\n`));
   createVaultStructure(vaultPath, undefined, undefined);

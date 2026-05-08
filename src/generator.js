@@ -1,5 +1,5 @@
 // @ts-check
-import { existsSync, readFileSync, writeFileSync } from 'fs';
+import { existsSync, readFileSync, readdirSync, writeFileSync } from 'fs';
 import { join, basename, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import chalk from 'chalk';
@@ -107,21 +107,17 @@ export async function runGenerate(dir, opts = {}) {
   const scanResult = await scan(dir);
 
   if (opts.template) {
-    const validTemplates = [
-      'nextjs',
-      'react-vite',
-      'python-fastapi',
-      'python-data',
-      'node-cli',
-      'typescript-lib',
-      'go',
-      'generic',
-    ];
+    // Derive valid templates from the templates/ directory so this list can
+    // never drift from what's actually shipped (previously hard-coded and
+    // missed `rust` after that template was added).
+    const validTemplates = readdirSync(TEMPLATES_DIR)
+      .filter((f) => f.endsWith('.md'))
+      .map((f) => f.replace(/\.md$/, ''))
+      .sort();
     if (!validTemplates.includes(opts.template)) {
-      console.error(
-        chalk.red(`Unknown template: ${opts.template}. Valid: ${validTemplates.join(', ')}`),
-      );
-      process.exit(1);
+      // Throw instead of process.exit so callers can catch and recover —
+      // the bin script handles top-level errors and sets the exit code.
+      throw new Error(`Unknown template: ${opts.template}. Valid: ${validTemplates.join(', ')}`);
     }
     scanResult.template = opts.template;
   }

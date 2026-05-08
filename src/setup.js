@@ -1,6 +1,8 @@
 // @ts-check
-import { existsSync, writeFileSync } from 'fs';
-import { join, resolve } from 'path';
+import { existsSync, readdirSync, writeFileSync } from 'fs';
+import { join, resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { homedir } from 'os';
 import chalk from 'chalk';
 import ora from 'ora';
 import { input, confirm, select } from '@inquirer/prompts';
@@ -13,12 +15,7 @@ import {
   todayStr,
   buildHome,
 } from './brain.js';
-import {
-  wireGlobalClaude,
-  generateGeminiMd,
-  generateContinueMd,
-  generateAllProjectConfigs,
-} from './wirer.js';
+import { wireGlobalClaude, generateAllProjectConfigs } from './wirer.js';
 import { buildUserProfile } from './profiler.js';
 import { runOnboarding, shouldRunOnboarding } from './onboarding.js';
 import {
@@ -28,8 +25,32 @@ import {
   describePlan,
 } from './brain-strategies.js';
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const TEMPLATES_DIR = join(__dirname, 'templates');
+
+/** Expand a leading `~` to the user's home dir before resolve(). Node's
+ *  resolve() does not handle `~` itself — without this, `--project ~/foo`
+ *  silently creates a literal `~/foo` directory in CWD. */
+function expandHome(p) {
+  if (typeof p !== 'string' || !p) return p;
+  if (p === '~') return homedir();
+  if (p.startsWith('~/') || p.startsWith('~\\')) return join(homedir(), p.slice(2));
+  return p;
+}
+
+/** Read the names of every template shipped under src/templates/. Single
+ *  source of truth so generator.js + setup.js can never drift again. */
+function listTemplates() {
+  return readdirSync(TEMPLATES_DIR)
+    .filter((f) => f.endsWith('.md'))
+    .map((f) => f.replace(/\.md$/, ''))
+    .sort();
+}
+
 export async function runSetup(opts = {}) {
-  const projectDir = resolve(typeof opts.project === 'string' ? opts.project : process.cwd());
+  const projectDir = resolve(
+    expandHome(typeof opts.project === 'string' ? opts.project : process.cwd()),
+  );
   const isDryRun = opts.dryRun ?? false;
   const autoYes = opts.yes ?? false;
 
@@ -80,21 +101,11 @@ export async function runSetup(opts = {}) {
   const scanResult = await scan(projectDir);
   scanSpinner.succeed('Detected: ' + chalk.green(scanResult.label));
 
-  const templates = [
-    'nextjs',
-    'react-vite',
-    'python-fastapi',
-    'python-data',
-    'node-cli',
-    'typescript-lib',
-    'go',
-    'generic',
-  ];
   if (!autoYes) {
     const choice = await select({
       message: 'Template to use:',
       default: scanResult.template,
-      choices: templates.map((t) => ({
+      choices: listTemplates().map((t) => ({
         value: t,
         name: t === scanResult.template ? t + ' (detected)' : t,
       })),
@@ -131,7 +142,7 @@ export async function runSetup(opts = {}) {
 
   // Step 4: Brain vault
   let brainPath = resolve(
-    typeof opts.brain === 'string' && opts.brain ? opts.brain : defaultBrainPath(),
+    expandHome(typeof opts.brain === 'string' && opts.brain ? opts.brain : defaultBrainPath()),
   );
   let setupBrain = opts.brain !== false;
 
@@ -142,7 +153,7 @@ export async function runSetup(opts = {}) {
     });
     if (setupBrain) {
       const custom = await input({ message: 'Brain vault path:', default: brainPath });
-      brainPath = resolve(custom);
+      brainPath = resolve(expandHome(custom));
     }
   }
 
@@ -299,7 +310,7 @@ export async function runSetup(opts = {}) {
 export async function runUpdate(opts = {}) {
   const { readFileSync } = await import('fs');
   const brainPath = resolve(
-    typeof opts.brain === 'string' && opts.brain ? opts.brain : defaultBrainPath(),
+    expandHome(typeof opts.brain === 'string' && opts.brain ? opts.brain : defaultBrainPath()),
   );
 
   if (!existsSync(join(brainPath, 'Home.md'))) {
