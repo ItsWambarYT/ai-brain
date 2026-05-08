@@ -220,15 +220,60 @@ After a few weeks your vault is a knowledge graph of every decision, every fix, 
 
 ---
 
-## Privacy
+## Privacy & Data Handling
 
-The profiler reads **only**:
-- File paths from git repos (not source code content)
-- `package.json` / `pyproject.toml` dependency lists (not source code)
-- Claude Code memory index files (summaries you wrote, not raw conversations)
-- Config file existence (to detect which tools are installed)
+ai-brain runs **entirely on your machine**. No code, file contents, or
+configuration is ever sent over the network. There is no analytics, no
+telemetry, no cloud component — the tool simply reads from disk and writes
+to disk. You can read every line of `src/profiler.js` and `src/scanner.js`
+to verify this for yourself.
 
-No source code is read. No conversations are read. Everything stays local.
+### What it reads
+
+- **Repo paths only** — directory names under `~/Desktop`, `~/Documents`,
+  `~/Projects`, `~/code`, `~/src`, `~/dev` etc. No source code is opened.
+- **Manifest files** — `package.json`, `pyproject.toml`, `requirements.txt`,
+  `setup.py`, `go.mod`, `Cargo.toml`, `Gemfile`, `composer.json`, `Dockerfile`.
+  Only dependency lists + project name are extracted. Lock files, scripts,
+  and arbitrary fields are ignored.
+- **Last-commit timestamp** of each repo (via `git log -1 --format=%cI`),
+  to surface recently-active projects in the generated `Home.md`.
+- **AI agent config existence** — which tools you have installed (Claude Code,
+  Gemini CLI, Cursor, etc.). Tool *contents* are not read, only the file's
+  presence.
+- **Claude Code memory index** (`~/.claude/projects/.../memory/MEMORY.md` or
+  the `~/.claude/CLAUDE.md` file). These are short summaries *you* wrote;
+  raw conversation transcripts are never opened.
+
+### What it never reads
+
+- ❌ Source code files (`.js`, `.py`, `.go`, `.rs`, `.ts`, etc.)
+- ❌ `.env` / `.env.*` files
+- ❌ Anything inside `.git/` (objects, refs, hooks)
+- ❌ `node_modules/`, `venv/`, `.venv/`, `__pycache__/`, `dist/`, `build/`
+- ❌ Raw AI conversation logs / chat histories
+- ❌ Browser data, SSH keys, shell history, system credentials
+
+### What it writes
+
+- `~/AgentBrain/` — the generated brain vault (markdown notes you edit).
+  Path is configurable via `--brain-path`; nothing is written outside it.
+- `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`,
+  `.continue/config.json`, `GEMINI.md`, etc. in the **current project
+  directory only** — and only the ones you opt in to during the interactive
+  setup. With `--no-brain` or `--dry-run` nothing is written.
+- A one-line entry into `~/.claude/CLAUDE.md` (or your global
+  `~/.gemini/GEMINI.md`) that points agents at the brain vault. This is
+  appended, never overwritten — and only if the matching agent is detected.
+
+### Removing everything
+
+```bash
+rm -rf ~/AgentBrain                    # the vault
+rm  CLAUDE.md AGENTS.md .cursorrules   # per-project configs you don't want
+# (the global CLAUDE.md / GEMINI.md entries are clearly fenced —
+#  remove the `<!-- ai-brain -->` block by hand if you no longer want them)
+```
 
 ---
 

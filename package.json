@@ -1,6 +1,6 @@
 {
   "name": "ai-brain",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Give every AI coding agent a persistent, personalized brain — auto-built from your git repos, Claude history, and project stack. One command.",
   "keywords": [
     "ai",
@@ -44,12 +44,17 @@
   "files": [
     "bin/",
     "src/",
+    "assets/",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "dev": "node bin/ai-brain.js",
-    "test": "node --test src/__tests__/"
+    "test": "node --test \"src/__tests__/**/*.test.js\"",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "commander": "^12.1.0",
@@ -57,6 +62,12 @@
     "ora": "^8.1.1",
     "inquirer": "^10.2.2",
     "fast-glob": "^3.3.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.13.0",
+    "eslint": "^9.13.0",
+    "globals": "^15.11.0",
+    "prettier": "^3.3.3"
   },
   "engines": {
     "node": ">=18.0.0"

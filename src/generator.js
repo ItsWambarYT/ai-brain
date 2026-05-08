@@ -65,8 +65,10 @@ function buildExtraStack(detected, meta) {
   if (detected.includes('uv')) lines.push('- **Package manager:** uv');
   if (detected.includes('docker')) lines.push('- **Containers:** Docker');
   if (detected.includes('monorepo')) lines.push('- **Monorepo:** pnpm workspaces / Turborepo');
-  if (detected.includes('go-web') && meta.framework) lines.push(`- **Web framework:** ${meta.framework}`);
-  if (detected.includes('node-server') && meta.framework) lines.push(`- **Web framework:** ${meta.framework}`);
+  if (detected.includes('go-web') && meta.framework)
+    lines.push(`- **Web framework:** ${meta.framework}`);
+  if (detected.includes('node-server') && meta.framework)
+    lines.push(`- **Web framework:** ${meta.framework}`);
   if (detected.includes('tokio')) lines.push('- **Async runtime:** Tokio');
   return lines.length ? '\n' + lines.join('\n') : '';
 }
@@ -85,12 +87,16 @@ function detectPython() {
 
 /** @param {string} path @returns {any|null} */
 function tryReadJson(path) {
-  try { return JSON.parse(readFileSync(path, 'utf8')); } catch { return null; }
+  try {
+    return JSON.parse(readFileSync(path, 'utf8'));
+  } catch {
+    return null;
+  }
 }
 
 /** @param {string} s @returns {string} */
 function toTitleCase(s) {
-  return s.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return s.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 /**
@@ -101,9 +107,20 @@ export async function runGenerate(dir, opts = {}) {
   const scanResult = await scan(dir);
 
   if (opts.template) {
-    const validTemplates = ['nextjs', 'react-vite', 'python-fastapi', 'python-data', 'node-cli', 'typescript-lib', 'go', 'generic'];
+    const validTemplates = [
+      'nextjs',
+      'react-vite',
+      'python-fastapi',
+      'python-data',
+      'node-cli',
+      'typescript-lib',
+      'go',
+      'generic',
+    ];
     if (!validTemplates.includes(opts.template)) {
-      console.error(chalk.red(`Unknown template: ${opts.template}. Valid: ${validTemplates.join(', ')}`));
+      console.error(
+        chalk.red(`Unknown template: ${opts.template}. Valid: ${validTemplates.join(', ')}`),
+      );
       process.exit(1);
     }
     scanResult.template = opts.template;

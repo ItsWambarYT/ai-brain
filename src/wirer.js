@@ -192,7 +192,11 @@ function writeGlobalConfig(filePath, title, snippet) {
   }
 
   const content = readFileSync(filePath, 'utf8');
-  if (content.includes('Brain Vault') || content.includes('AgentBrain') || content.includes('brain vault')) {
+  if (
+    content.includes('Brain Vault') ||
+    content.includes('AgentBrain') ||
+    content.includes('brain vault')
+  ) {
     return { action: 'already_wired', path: filePath };
   }
 

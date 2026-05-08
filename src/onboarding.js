@@ -31,16 +31,43 @@ const ROLES = [
 ];
 
 const LANGUAGES = [
-  'TypeScript', 'JavaScript', 'Python', 'Go', 'Rust',
-  'Java', 'C#', 'Ruby', 'PHP', 'Swift', 'Kotlin', 'C/C++',
+  'TypeScript',
+  'JavaScript',
+  'Python',
+  'Go',
+  'Rust',
+  'Java',
+  'C#',
+  'Ruby',
+  'PHP',
+  'Swift',
+  'Kotlin',
+  'C/C++',
 ];
 
 const FRAMEWORKS = [
-  'Next.js', 'React', 'Vue', 'Svelte', 'Angular',
-  'FastAPI', 'Django', 'Flask', 'Express', 'Fastify', 'Hono',
-  'Spring Boot', '.NET', 'Rails',
-  'TailwindCSS', 'Prisma', 'Drizzle', 'SQLAlchemy',
-  'PyTorch', 'TensorFlow', 'pandas', 'scikit-learn',
+  'Next.js',
+  'React',
+  'Vue',
+  'Svelte',
+  'Angular',
+  'FastAPI',
+  'Django',
+  'Flask',
+  'Express',
+  'Fastify',
+  'Hono',
+  'Spring Boot',
+  '.NET',
+  'Rails',
+  'TailwindCSS',
+  'Prisma',
+  'Drizzle',
+  'SQLAlchemy',
+  'PyTorch',
+  'TensorFlow',
+  'pandas',
+  'scikit-learn',
 ];
 
 const STYLES = [
@@ -69,12 +96,12 @@ export async function runOnboarding(detected = {}) {
   const role = await select({
     message: 'Your role:',
     default: detected.detectedRole || 'Full-Stack Developer',
-    choices: ROLES.map(r => ({ value: r })),
+    choices: ROLES.map((r) => ({ value: r })),
   });
 
   const languages = await checkbox({
     message: 'Primary languages (space to select, enter to confirm):',
-    choices: LANGUAGES.map(l => ({
+    choices: LANGUAGES.map((l) => ({
       value: l,
       checked: (detected.languages || []).includes(l),
     })),
@@ -83,7 +110,7 @@ export async function runOnboarding(detected = {}) {
 
   const frameworks = await checkbox({
     message: 'Frameworks / tools you use regularly:',
-    choices: FRAMEWORKS.map(f => ({
+    choices: FRAMEWORKS.map((f) => ({
       value: f,
       checked: (detected.frameworks || []).includes(f),
     })),
@@ -91,13 +118,13 @@ export async function runOnboarding(detected = {}) {
 
   const style = await select({
     message: 'Your coding style:',
-    choices: STYLES.map(s => ({ value: s })),
+    choices: STYLES.map((s) => ({ value: s })),
   });
 
   const packageManager = await select({
     message: 'Default package manager:',
     default: 'pnpm',
-    choices: ['pnpm', 'npm', 'yarn', 'bun', 'N/A'].map(v => ({ value: v })),
+    choices: ['pnpm', 'npm', 'yarn', 'bun', 'N/A'].map((v) => ({ value: v })),
   });
 
   const currentWork = await input({
@@ -107,7 +134,8 @@ export async function runOnboarding(detected = {}) {
   });
 
   const agentRules = await input({
-    message: 'One rule every AI agent must follow (e.g. "never add comments", "always verify before reporting done"):',
+    message:
+      'One rule every AI agent must follow (e.g. "never add comments", "always verify before reporting done"):',
     default: 'Finish tasks completely — verify before reporting done',
   });
 

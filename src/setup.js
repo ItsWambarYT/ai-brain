@@ -8,7 +8,12 @@ import { input, confirm, select } from '@inquirer/prompts';
 import { scan } from './scanner.js';
 import { buildClaudeMd } from './generator.js';
 import { defaultBrainPath, createVaultStructure, registerInObsidian } from './brain.js';
-import { wireGlobalClaude, generateGeminiMd, generateContinueMd, generateAllProjectConfigs } from './wirer.js';
+import {
+  wireGlobalClaude,
+  generateGeminiMd,
+  generateContinueMd,
+  generateAllProjectConfigs,
+} from './wirer.js';
 import { buildUserProfile } from './profiler.js';
 import { runOnboarding, shouldRunOnboarding } from './onboarding.js';
 
@@ -27,12 +32,24 @@ export async function runSetup(opts = {}) {
   try {
     profile = await buildUserProfile();
     profileSpinner.succeed(
-      'Found ' + chalk.green(profile.projects.length) + ' projects · ' +
-      (profile.aiTools.length ? chalk.green(profile.aiTools.join(', ')) : chalk.gray('no AI tools detected'))
+      'Found ' +
+        chalk.green(profile.projects.length) +
+        ' projects · ' +
+        (profile.aiTools.length
+          ? chalk.green(profile.aiTools.join(', '))
+          : chalk.gray('no AI tools detected')),
     );
   } catch (err) {
     profileSpinner.warn('Could not scan profile — using defaults');
-    profile = { projects: [], languages: [], frameworks: [], aiTools: [], claudeTopics: [], detectedRole: '', hasExistingBrain: false };
+    profile = {
+      projects: [],
+      languages: [],
+      frameworks: [],
+      aiTools: [],
+      claudeTopics: [],
+      detectedRole: '',
+      hasExistingBrain: false,
+    };
   }
 
   // Onboarding if profile is sparse and not --yes
@@ -52,12 +69,24 @@ export async function runSetup(opts = {}) {
   const scanResult = await scan(projectDir);
   scanSpinner.succeed('Detected: ' + chalk.green(scanResult.label));
 
-  const templates = ['nextjs', 'react-vite', 'python-fastapi', 'python-data', 'node-cli', 'typescript-lib', 'go', 'generic'];
+  const templates = [
+    'nextjs',
+    'react-vite',
+    'python-fastapi',
+    'python-data',
+    'node-cli',
+    'typescript-lib',
+    'go',
+    'generic',
+  ];
   if (!autoYes) {
     const choice = await select({
       message: 'Template to use:',
       default: scanResult.template,
-      choices: templates.map(t => ({ value: t, name: t === scanResult.template ? (t + ' (detected)') : t })),
+      choices: templates.map((t) => ({
+        value: t,
+        name: t === scanResult.template ? t + ' (detected)' : t,
+      })),
     });
     scanResult.template = choice;
   }
@@ -68,7 +97,10 @@ export async function runSetup(opts = {}) {
   let writeClaudeMd = !claudeExists || !!opts.force;
 
   if (claudeExists && !opts.force && !autoYes) {
-    writeClaudeMd = await confirm({ message: 'CLAUDE.md already exists — overwrite?', default: false });
+    writeClaudeMd = await confirm({
+      message: 'CLAUDE.md already exists — overwrite?',
+      default: false,
+    });
   }
 
   const claudeMdContent = buildClaudeMd(projectDir, scanResult);
@@ -87,11 +119,16 @@ export async function runSetup(opts = {}) {
   }
 
   // Step 4: Brain vault
-  let brainPath = resolve(typeof opts.brain === 'string' && opts.brain ? opts.brain : defaultBrainPath());
+  let brainPath = resolve(
+    typeof opts.brain === 'string' && opts.brain ? opts.brain : defaultBrainPath(),
+  );
   let setupBrain = opts.brain !== false;
 
   if (!autoYes && setupBrain && opts.brain === undefined) {
-    setupBrain = await confirm({ message: 'Create personalized brain vault at ' + brainPath + '?', default: true });
+    setupBrain = await confirm({
+      message: 'Create personalized brain vault at ' + brainPath + '?',
+      default: true,
+    });
     if (setupBrain) {
       const custom = await input({ message: 'Brain vault path:', default: brainPath });
       brainPath = resolve(custom);
@@ -102,14 +139,24 @@ export async function runSetup(opts = {}) {
     createVaultStructure(brainPath, profile ?? undefined, answers ?? undefined);
     if (profile?.projects.length) {
       console.log(chalk.green('✓ Brain vault: ' + brainPath));
-      console.log(chalk.gray('  Personalized with ' + profile.projects.length + ' projects, ' + profile.frameworks.length + ' skill notes'));
+      console.log(
+        chalk.gray(
+          '  Personalized with ' +
+            profile.projects.length +
+            ' projects, ' +
+            profile.frameworks.length +
+            ' skill notes',
+        ),
+      );
     } else {
       console.log(chalk.green('✓ Brain vault: ' + brainPath));
     }
 
     const wireResult = wireGlobalClaude(brainPath);
-    if (wireResult.action === 'created') console.log(chalk.green('✓ ~/.claude/CLAUDE.md → wired to brain'));
-    else if (wireResult.action === 'appended') console.log(chalk.green('✓ Global CLAUDE.md wired to brain'));
+    if (wireResult.action === 'created')
+      console.log(chalk.green('✓ ~/.claude/CLAUDE.md → wired to brain'));
+    else if (wireResult.action === 'appended')
+      console.log(chalk.green('✓ Global CLAUDE.md wired to brain'));
     else console.log(chalk.gray('  ~/.claude/CLAUDE.md already wired'));
 
     const obsResult = registerInObsidian(brainPath);
@@ -122,7 +169,10 @@ export async function runSetup(opts = {}) {
   // Step 5: Gemini + Continue
   let doGemini = opts.gemini !== false;
   if (!autoYes && doGemini && opts.gemini === undefined) {
-    doGemini = await confirm({ message: 'Wire ~/.gemini/GEMINI.md for Gemini CLI?', default: true });
+    doGemini = await confirm({
+      message: 'Wire ~/.gemini/GEMINI.md for Gemini CLI?',
+      default: true,
+    });
   }
   if (doGemini && !isDryRun) {
     generateGeminiMd(brainPath);
@@ -134,7 +184,8 @@ export async function runSetup(opts = {}) {
   let doAgents = opts.agents !== false;
   if (!autoYes && doAgents && opts.agents === undefined) {
     doAgents = await confirm({
-      message: 'Generate all agent configs? (AGENTS.md, .cursorrules, .windsurfrules, copilot-instructions, .clinerules)',
+      message:
+        'Generate all agent configs? (AGENTS.md, .cursorrules, .windsurfrules, copilot-instructions, .clinerules)',
       default: true,
     });
   }
@@ -146,7 +197,11 @@ export async function runSetup(opts = {}) {
       else console.log(chalk.gray('  ' + r.file + ' (already exists)'));
     }
   } else if (doAgents && isDryRun) {
-    console.log(chalk.yellow('[dry-run] Would write: AGENTS.md, .cursorrules, .windsurfrules, .github/copilot-instructions.md, .clinerules'));
+    console.log(
+      chalk.yellow(
+        '[dry-run] Would write: AGENTS.md, .cursorrules, .windsurfrules, .github/copilot-instructions.md, .clinerules',
+      ),
+    );
   }
 
   // Done
@@ -158,13 +213,17 @@ export async function runSetup(opts = {}) {
     console.log(chalk.gray('  1. Open Obsidian → "Open folder as vault" → ' + brainPath));
     console.log(chalk.gray('  2. Edit ' + brainPath + '/Me.md — tell your agents who you are'));
   }
-  console.log(chalk.gray('  3. Start a new AI session — all agents now read your brain automatically'));
+  console.log(
+    chalk.gray('  3. Start a new AI session — all agents now read your brain automatically'),
+  );
   console.log('');
 }
 
 export async function runUpdate(opts = {}) {
   const { readFileSync } = await import('fs');
-  const brainPath = resolve(typeof opts.brain === 'string' && opts.brain ? opts.brain : defaultBrainPath());
+  const brainPath = resolve(
+    typeof opts.brain === 'string' && opts.brain ? opts.brain : defaultBrainPath(),
+  );
 
   if (!existsSync(join(brainPath, 'Home.md'))) {
     console.log(chalk.red('No brain vault found at ' + brainPath));
@@ -178,19 +237,33 @@ export async function runUpdate(opts = {}) {
   try {
     profile = await buildUserProfile();
     sp.succeed('Found ' + chalk.green(String(profile.projects.length)) + ' projects');
-  } catch { sp.fail('Scan failed'); return; }
+  } catch {
+    sp.fail('Scan failed');
+    return;
+  }
 
   const today = new Date().toISOString().slice(0, 10);
   const dailyPath = join(brainPath, 'Daily', today + '.md');
-  const entry = '\n### ai-brain update\n\nRescanned: ' + profile.projects.length + ' projects. AI tools: ' + (profile.aiTools.join(', ') || 'none') + '.\n';
+  const entry =
+    '\n### ai-brain update\n\nRescanned: ' +
+    profile.projects.length +
+    ' projects. AI tools: ' +
+    (profile.aiTools.join(', ') || 'none') +
+    '.\n';
 
   try {
     if (existsSync(dailyPath)) {
       writeFileSync(dailyPath, readFileSync(dailyPath, 'utf8') + entry, 'utf8');
     } else {
-      writeFileSync(dailyPath, '# ' + today + '\n\n## Sessions\n' + entry + '\n## Topic Nodes\n', 'utf8');
+      writeFileSync(
+        dailyPath,
+        '# ' + today + '\n\n## Sessions\n' + entry + '\n## Topic Nodes\n',
+        'utf8',
+      );
     }
-  } catch { /* ignore write errors */ }
+  } catch {
+    /* ignore write errors */
+  }
 
   console.log(chalk.green('  Brain vault updated'));
   console.log('');

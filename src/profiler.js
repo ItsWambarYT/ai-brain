@@ -48,11 +48,12 @@ export async function buildUserProfile() {
     detectAiTools(),
   ]);
 
-  const languages = dedupe(projects.flatMap(p => signalsToLanguages(p.signals)));
-  const frameworks = dedupe(projects.flatMap(p => signalsToFrameworks(p.signals)));
+  const languages = dedupe(projects.flatMap((p) => signalsToLanguages(p.signals)));
+  const frameworks = dedupe(projects.flatMap((p) => signalsToFrameworks(p.signals)));
   const detectedRole = inferRole(languages, frameworks, projects);
-  const hasExistingBrain = existsSync(join(HOME, 'AgentBrain', 'Home.md')) ||
-                           existsSync(join(HOME, 'ClaudeBrain', 'Home.md'));
+  const hasExistingBrain =
+    existsSync(join(HOME, 'AgentBrain', 'Home.md')) ||
+    existsSync(join(HOME, 'ClaudeBrain', 'Home.md'));
 
   return { projects, languages, frameworks, aiTools, claudeTopics, detectedRole, hasExistingBrain };
 }
@@ -114,7 +115,10 @@ async function analyzeRepo(repoPath) {
     lastActive = execSync(`git -C "${repoPath}" log -1 --format=%ci 2>/dev/null`, {
       timeout: 3000,
       stdio: ['pipe', 'pipe', 'pipe'],
-    }).toString().trim().slice(0, 10);
+    })
+      .toString()
+      .trim()
+      .slice(0, 10);
   } catch {
     return null; // no commits or git error
   }
@@ -145,7 +149,8 @@ function detectStack(dir) {
     else if (deps.includes('react')) signals.push('react');
     if (deps.includes('vite') || deps.includes('@vitejs/plugin-react')) signals.push('vite');
     if (deps.includes('typescript') || deps.includes('ts-node')) signals.push('typescript');
-    if (deps.includes('fastify') || deps.includes('express') || deps.includes('hono')) signals.push('node-server');
+    if (deps.includes('fastify') || deps.includes('express') || deps.includes('hono'))
+      signals.push('node-server');
     if (pkg.bin && !deps.includes('react') && !deps.includes('next')) signals.push('node-cli');
     if (deps.includes('tailwindcss')) signals.push('tailwind');
     if (deps.includes('prisma') || deps.includes('@prisma/client')) signals.push('prisma');
@@ -156,20 +161,26 @@ function detectStack(dir) {
     if (deps.includes('zustand') || deps.includes('jotai')) signals.push('state-mgmt');
   }
 
-  const pyproject = tryText(join(dir, 'pyproject.toml')) || tryText(join(dir, 'requirements.txt')) || '';
+  const pyproject =
+    tryText(join(dir, 'pyproject.toml')) || tryText(join(dir, 'requirements.txt')) || '';
   if (pyproject) {
     signals.push('python');
     if (/fastapi/i.test(pyproject)) signals.push('fastapi');
     else if (/django/i.test(pyproject)) signals.push('django');
     else if (/flask/i.test(pyproject)) signals.push('flask');
-    if (/pandas|numpy|jupyter|torch|tensorflow|sklearn|polars/i.test(pyproject)) signals.push('data-science');
+    if (/pandas|numpy|jupyter|torch|tensorflow|sklearn|polars/i.test(pyproject))
+      signals.push('data-science');
     if (/sqlalchemy/i.test(pyproject)) signals.push('sqlalchemy');
     if (/alembic/i.test(pyproject)) signals.push('alembic');
   }
 
   if (existsSync(join(dir, 'go.mod'))) signals.push('go');
   if (existsSync(join(dir, 'Cargo.toml'))) signals.push('rust');
-  if (existsSync(join(dir, 'tsconfig.json')) && !signals.includes('next') && !signals.includes('react')) {
+  if (
+    existsSync(join(dir, 'tsconfig.json')) &&
+    !signals.includes('next') &&
+    !signals.includes('react')
+  ) {
     signals.push('typescript-lib');
   }
 
@@ -179,15 +190,19 @@ function detectStack(dir) {
 /** @param {string[]} signals @returns {{ template: string, label: string, signals: string[] }} */
 function pickTemplate(signals) {
   if (signals.includes('next')) return { template: 'nextjs', label: 'Next.js', signals };
-  if (signals.includes('react') && signals.includes('vite')) return { template: 'react-vite', label: 'React + Vite', signals };
+  if (signals.includes('react') && signals.includes('vite'))
+    return { template: 'react-vite', label: 'React + Vite', signals };
   if (signals.includes('react')) return { template: 'react-vite', label: 'React', signals };
-  if (signals.includes('fastapi')) return { template: 'python-fastapi', label: 'Python FastAPI', signals };
-  if (signals.includes('data-science')) return { template: 'python-data', label: 'Python / Data', signals };
+  if (signals.includes('fastapi'))
+    return { template: 'python-fastapi', label: 'Python FastAPI', signals };
+  if (signals.includes('data-science'))
+    return { template: 'python-data', label: 'Python / Data', signals };
   if (signals.includes('python')) return { template: 'python-fastapi', label: 'Python', signals };
   if (signals.includes('node-cli')) return { template: 'node-cli', label: 'Node CLI', signals };
   if (signals.includes('go')) return { template: 'go', label: 'Go', signals };
   if (signals.includes('rust')) return { template: 'generic', label: 'Rust', signals };
-  if (signals.includes('typescript-lib') || signals.includes('typescript')) return { template: 'typescript-lib', label: 'TypeScript', signals };
+  if (signals.includes('typescript-lib') || signals.includes('typescript'))
+    return { template: 'typescript-lib', label: 'TypeScript', signals };
   if (signals.includes('node-server')) return { template: 'node-cli', label: 'Node.js', signals };
   return { template: 'generic', label: 'Project', signals };
 }
@@ -202,8 +217,8 @@ async function scanClaudeMemory() {
 
   try {
     const projectDirs = readdirSync(memoryBase, { withFileTypes: true })
-      .filter(e => e.isDirectory())
-      .map(e => join(memoryBase, e.name));
+      .filter((e) => e.isDirectory())
+      .map((e) => join(memoryBase, e.name));
 
     for (const pDir of projectDirs) {
       // Read MEMORY.md index files (summaries, not raw conversations)
@@ -241,7 +256,7 @@ async function detectAiTools() {
     join(HOME, 'Library', 'Application Support', 'Cursor'),
     join(HOME, '.config', 'Cursor'),
   ];
-  if (cursorPaths.some(p => existsSync(p))) tools.push('Cursor');
+  if (cursorPaths.some((p) => existsSync(p))) tools.push('Cursor');
 
   // Windsurf
   const windsurfPaths = [
@@ -249,7 +264,7 @@ async function detectAiTools() {
     join(HOME, 'AppData', 'Roaming', 'Windsurf'),
     join(HOME, 'Library', 'Application Support', 'Windsurf'),
   ];
-  if (windsurfPaths.some(p => existsSync(p))) tools.push('Windsurf');
+  if (windsurfPaths.some((p) => existsSync(p))) tools.push('Windsurf');
 
   // VS Code (Copilot/Cline/Continue)
   const vscodePaths = [
@@ -258,13 +273,15 @@ async function detectAiTools() {
     join(HOME, 'Library', 'Application Support', 'Code'),
     join(HOME, '.config', 'Code'),
   ];
-  if (vscodePaths.some(p => existsSync(p))) tools.push('VS Code');
+  if (vscodePaths.some((p) => existsSync(p))) tools.push('VS Code');
 
   // Aider
   try {
     execSync('aider --version', { stdio: 'pipe', timeout: 2000 });
     tools.push('Aider');
-  } catch { /* not installed */ }
+  } catch {
+    /* not installed */
+  }
 
   // Continue extension marker
   if (existsSync(join(HOME, '.continue'))) tools.push('Continue');
@@ -277,18 +294,31 @@ async function detectAiTools() {
 /** @param {string[]} signals @returns {string[]} */
 function signalsToLanguages(signals) {
   const langs = [];
-  if (signals.includes('typescript') || signals.includes('next') || signals.includes('react') ||
-      signals.includes('typescript-lib') || signals.includes('node-cli') || signals.includes('node-server')) {
+  if (
+    signals.includes('typescript') ||
+    signals.includes('next') ||
+    signals.includes('react') ||
+    signals.includes('typescript-lib') ||
+    signals.includes('node-cli') ||
+    signals.includes('node-server')
+  ) {
     langs.push('TypeScript');
   }
-  if (signals.includes('python') || signals.includes('fastapi') || signals.includes('django') ||
-      signals.includes('flask') || signals.includes('data-science')) {
+  if (
+    signals.includes('python') ||
+    signals.includes('fastapi') ||
+    signals.includes('django') ||
+    signals.includes('flask') ||
+    signals.includes('data-science')
+  ) {
     langs.push('Python');
   }
   if (signals.includes('go')) langs.push('Go');
   if (signals.includes('rust')) langs.push('Rust');
-  if (signals.some(s => ['next', 'react', 'vite', 'node-cli', 'node-server'].includes(s)) &&
-      !signals.includes('typescript')) {
+  if (
+    signals.some((s) => ['next', 'react', 'vite', 'node-cli', 'node-server'].includes(s)) &&
+    !signals.includes('typescript')
+  ) {
     langs.push('JavaScript');
   }
   return langs;
@@ -297,24 +327,44 @@ function signalsToLanguages(signals) {
 /** @param {string[]} signals @returns {string[]} */
 function signalsToFrameworks(signals) {
   const map = {
-    next: 'Next.js', react: 'React', vite: 'Vite', tailwind: 'Tailwind CSS',
-    prisma: 'Prisma', drizzle: 'Drizzle ORM', trpc: 'tRPC', auth: 'NextAuth',
-    'react-query': 'TanStack Query', 'state-mgmt': 'Zustand',
-    fastapi: 'FastAPI', django: 'Django', flask: 'Flask',
-    sqlalchemy: 'SQLAlchemy', alembic: 'Alembic', 'data-science': 'pandas/numpy',
-    'node-server': 'Node.js (server)', 'node-cli': 'Node.js (CLI)',
-    'typescript-lib': 'TypeScript', go: 'Go', rust: 'Rust',
+    next: 'Next.js',
+    react: 'React',
+    vite: 'Vite',
+    tailwind: 'Tailwind CSS',
+    prisma: 'Prisma',
+    drizzle: 'Drizzle ORM',
+    trpc: 'tRPC',
+    auth: 'NextAuth',
+    'react-query': 'TanStack Query',
+    'state-mgmt': 'Zustand',
+    fastapi: 'FastAPI',
+    django: 'Django',
+    flask: 'Flask',
+    sqlalchemy: 'SQLAlchemy',
+    alembic: 'Alembic',
+    'data-science': 'pandas/numpy',
+    'node-server': 'Node.js (server)',
+    'node-cli': 'Node.js (CLI)',
+    'typescript-lib': 'TypeScript',
+    go: 'Go',
+    rust: 'Rust',
   };
-  return signals.filter(s => map[s]).map(s => map[s]);
+  return signals.filter((s) => map[s]).map((s) => map[s]);
 }
 
 /** @param {string[]} langs @param {string[]} frameworks @param {ProjectInfo[]} projects @returns {string} */
 function inferRole(langs, frameworks, projects) {
-  const isFullstack = langs.includes('TypeScript') && (langs.includes('Python') || frameworks.some(f => ['FastAPI', 'Django'].includes(f)));
-  const isFrontend = frameworks.some(f => ['Next.js', 'React'].includes(f)) && !langs.includes('Python') && !langs.includes('Go');
+  const isFullstack =
+    langs.includes('TypeScript') &&
+    (langs.includes('Python') || frameworks.some((f) => ['FastAPI', 'Django'].includes(f)));
+  const isFrontend =
+    frameworks.some((f) => ['Next.js', 'React'].includes(f)) &&
+    !langs.includes('Python') &&
+    !langs.includes('Go');
   const isBackend = langs.includes('Python') || langs.includes('Go') || langs.includes('Rust');
-  const isDataSci = frameworks.some(f => f.includes('pandas') || f === 'FastAPI') && langs.includes('Python');
-  const isCLI = projects.some(p => p.template === 'node-cli');
+  const isDataSci =
+    frameworks.some((f) => f.includes('pandas') || f === 'FastAPI') && langs.includes('Python');
+  const isCLI = projects.some((p) => p.template === 'node-cli');
 
   if (isDataSci) return 'Data Scientist / ML Engineer';
   if (isFullstack) return 'Full-Stack Developer';
@@ -330,12 +380,20 @@ function inferRole(langs, frameworks, projects) {
 
 /** @param {string} p @returns {any|null} */
 function tryJson(p) {
-  try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; }
+  try {
+    return JSON.parse(readFileSync(p, 'utf8'));
+  } catch {
+    return null;
+  }
 }
 
 /** @param {string} p @returns {string|null} */
 function tryText(p) {
-  try { return existsSync(p) ? readFileSync(p, 'utf8') : null; } catch { return null; }
+  try {
+    return existsSync(p) ? readFileSync(p, 'utf8') : null;
+  } catch {
+    return null;
+  }
 }
 
 /** @param {string} dir @returns {string} */

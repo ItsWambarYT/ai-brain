@@ -19,12 +19,16 @@ console.log(chalk.cyan.bold('\n  ai-brain') + chalk.gray(' v' + pkg.version) + '
 
 program
   .name('ai-brain')
-  .description('Set up every AI coding agent with a personalized context file and Obsidian brain vault — built from your real git history and AI usage')
+  .description(
+    'Set up every AI coding agent with a personalized context file and Obsidian brain vault — built from your real git history and AI usage',
+  )
   .version(pkg.version);
 
 program
   .command('init', { isDefault: true })
-  .description('Scan project + AI history, generate all agent configs, create personalized brain vault (default)')
+  .description(
+    'Scan project + AI history, generate all agent configs, create personalized brain vault (default)',
+  )
   .option('-p, --project <path>', 'Path to project (default: current directory)', process.cwd())
   .option('-b, --brain <path>', 'Brain vault path (default: ~/AgentBrain)', '')
   .option('--no-brain', 'Skip brain vault creation')
@@ -47,7 +51,10 @@ program
   .description('Generate only CLAUDE.md (no brain, no agent configs)')
   .option('--force', 'Overwrite existing file')
   .option('--dry-run', 'Preview output without writing')
-  .option('--template <name>', 'Force a template: nextjs | react-vite | python-fastapi | python-data | node-cli | typescript-lib | go | generic')
+  .option(
+    '--template <name>',
+    'Force a template: nextjs | react-vite | python-fastapi | python-data | node-cli | typescript-lib | go | generic',
+  )
   .action(async (path, opts) => {
     await runGenerate(path || process.cwd(), opts);
   });

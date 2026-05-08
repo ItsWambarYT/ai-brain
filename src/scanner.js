@@ -16,7 +16,11 @@ import fg from 'fast-glob';
 function readJson(dir, file) {
   const p = join(dir, file);
   if (!existsSync(p)) return null;
-  try { return JSON.parse(readFileSync(p, 'utf8')); } catch { return null; }
+  try {
+    return JSON.parse(readFileSync(p, 'utf8'));
+  } catch {
+    return null;
+  }
 }
 
 /** @param {string} dir @returns {ScanResult} */
@@ -43,8 +47,10 @@ export async function scan(dir) {
     // Next.js
     if (depNames.includes('next')) {
       signals.push('next');
-      if (depNames.includes('@trpc/server') || depNames.includes('@trpc/client')) signals.push('trpc');
-      if (depNames.includes('prisma') || depNames.includes('@prisma/client')) signals.push('prisma');
+      if (depNames.includes('@trpc/server') || depNames.includes('@trpc/client'))
+        signals.push('trpc');
+      if (depNames.includes('prisma') || depNames.includes('@prisma/client'))
+        signals.push('prisma');
       if (depNames.includes('drizzle-orm')) signals.push('drizzle');
       if (depNames.includes('next-auth') || depNames.includes('@auth/core')) signals.push('auth');
       if (depNames.includes('@tanstack/react-query')) signals.push('react-query');
@@ -54,35 +60,55 @@ export async function scan(dir) {
     // React (without Next.js)
     if (!depNames.includes('next') && depNames.includes('react')) {
       signals.push('react');
-      if (depNames.includes('vite') || depNames.includes('@vitejs/plugin-react')) signals.push('vite');
+      if (depNames.includes('vite') || depNames.includes('@vitejs/plugin-react'))
+        signals.push('vite');
       if (depNames.includes('@tanstack/react-query')) signals.push('react-query');
-      if (depNames.includes('react-router-dom') || depNames.includes('@tanstack/react-router')) signals.push('router');
+      if (depNames.includes('react-router-dom') || depNames.includes('@tanstack/react-router'))
+        signals.push('router');
       if (depNames.includes('tailwindcss')) signals.push('tailwind');
-      if (depNames.includes('zustand') || depNames.includes('jotai') || depNames.includes('recoil')) signals.push('state-mgmt');
+      if (depNames.includes('zustand') || depNames.includes('jotai') || depNames.includes('recoil'))
+        signals.push('state-mgmt');
     }
 
     // Node CLI
     if (pkg.bin && !depNames.includes('react') && !depNames.includes('next')) {
       signals.push('node-cli');
-      if (depNames.includes('commander') || depNames.includes('yargs') || depNames.includes('meow')) signals.push('commander');
-      if (depNames.includes('inquirer') || depNames.includes('@inquirer/prompts')) signals.push('inquirer');
+      if (depNames.includes('commander') || depNames.includes('yargs') || depNames.includes('meow'))
+        signals.push('commander');
+      if (depNames.includes('inquirer') || depNames.includes('@inquirer/prompts'))
+        signals.push('inquirer');
     }
 
     // TypeScript library
-    if (tsconfig && !signals.includes('react') && !signals.includes('next') && !signals.includes('node-cli')) {
+    if (
+      tsconfig &&
+      !signals.includes('react') &&
+      !signals.includes('next') &&
+      !signals.includes('node-cli')
+    ) {
       signals.push('typescript-lib');
     }
 
     // Node server
-    if (depNames.includes('express') || depNames.includes('fastify') || depNames.includes('hono') || depNames.includes('koa')) {
+    if (
+      depNames.includes('express') ||
+      depNames.includes('fastify') ||
+      depNames.includes('hono') ||
+      depNames.includes('koa')
+    ) {
       signals.push('node-server');
-      meta.framework = depNames.includes('express') ? 'express' :
-                       depNames.includes('fastify') ? 'fastify' :
-                       depNames.includes('hono') ? 'hono' : 'koa';
+      meta.framework = depNames.includes('express')
+        ? 'express'
+        : depNames.includes('fastify')
+          ? 'fastify'
+          : depNames.includes('hono')
+            ? 'hono'
+            : 'koa';
     }
 
     if (depNames.includes('typescript') || depNames.includes('ts-node')) signals.push('typescript');
-    if (depNames.includes('jest') || depNames.includes('vitest') || depNames.includes('mocha')) signals.push('tests');
+    if (depNames.includes('jest') || depNames.includes('vitest') || depNames.includes('mocha'))
+      signals.push('tests');
     if (depNames.includes('eslint')) signals.push('eslint');
     if (depNames.includes('prettier')) signals.push('prettier');
     if (dockerFile) signals.push('docker');
@@ -90,12 +116,18 @@ export async function scan(dir) {
 
   if (pyproject || setupPy || requirementsTxt) {
     let content = '';
-    if (pyproject) { content = readFileSync(join(dir, 'pyproject.toml'), 'utf8'); signals.push('python'); }
-    if (requirementsTxt) { content = readFileSync(join(dir, 'requirements.txt'), 'utf8'); }
+    if (pyproject) {
+      content = readFileSync(join(dir, 'pyproject.toml'), 'utf8');
+      signals.push('python');
+    }
+    if (requirementsTxt) {
+      content = readFileSync(join(dir, 'requirements.txt'), 'utf8');
+    }
 
     if (content.includes('fastapi') || content.includes('FastAPI')) {
       signals.push('fastapi');
-      if (content.includes('sqlalchemy') || content.includes('SQLAlchemy')) signals.push('sqlalchemy');
+      if (content.includes('sqlalchemy') || content.includes('SQLAlchemy'))
+        signals.push('sqlalchemy');
       if (content.includes('pydantic')) signals.push('pydantic');
       if (content.includes('alembic')) signals.push('alembic');
       if (content.includes('asyncpg') || content.includes('aiosqlite')) signals.push('async-db');
@@ -106,15 +138,27 @@ export async function scan(dir) {
       signals.push('flask');
     }
 
-    if (content.includes('pandas') || content.includes('numpy') || content.includes('jupyter') ||
-        content.includes('matplotlib') || content.includes('scikit') || content.includes('torch') ||
-        content.includes('tensorflow') || content.includes('xgboost') || content.includes('polars')) {
+    if (
+      content.includes('pandas') ||
+      content.includes('numpy') ||
+      content.includes('jupyter') ||
+      content.includes('matplotlib') ||
+      content.includes('scikit') ||
+      content.includes('torch') ||
+      content.includes('tensorflow') ||
+      content.includes('xgboost') ||
+      content.includes('polars')
+    ) {
       signals.push('data-science');
       if (content.includes('torch') || content.includes('tensorflow')) signals.push('ml');
     }
 
     if (content.includes('pytest')) signals.push('pytest');
-    if (content.includes('poetry') || (pyproject && readFileSync(join(dir, 'pyproject.toml'), 'utf8').includes('[tool.poetry]'))) signals.push('poetry');
+    if (
+      content.includes('poetry') ||
+      (pyproject && readFileSync(join(dir, 'pyproject.toml'), 'utf8').includes('[tool.poetry]'))
+    )
+      signals.push('poetry');
     if (existsSync(join(dir, 'uv.lock'))) signals.push('uv');
     if (dockerFile) signals.push('docker');
   }
@@ -122,19 +166,28 @@ export async function scan(dir) {
   if (goMod) {
     signals.push('go');
     const modContent = readFileSync(join(dir, 'go.mod'), 'utf8');
-    if (modContent.includes('gin-gonic') || modContent.includes('echo') || modContent.includes('fiber')) signals.push('go-web');
+    if (
+      modContent.includes('gin-gonic') ||
+      modContent.includes('echo') ||
+      modContent.includes('fiber')
+    )
+      signals.push('go-web');
     meta.goModule = modContent.split('\n')[0]?.replace('module ', '').trim() || '';
   }
 
   if (cargoToml) {
     signals.push('rust');
     const content = readFileSync(join(dir, 'Cargo.toml'), 'utf8');
-    if (content.includes('actix-web') || content.includes('axum') || content.includes('warp')) signals.push('rust-web');
+    if (content.includes('actix-web') || content.includes('axum') || content.includes('warp'))
+      signals.push('rust-web');
     if (content.includes('tokio')) signals.push('tokio');
   }
 
   // Detect monorepo
-  const workspaceFiles = await fg(['packages/*/package.json', 'apps/*/package.json'], { cwd: dir, deep: 2 });
+  const workspaceFiles = await fg(['packages/*/package.json', 'apps/*/package.json'], {
+    cwd: dir,
+    deep: 2,
+  });
   if (workspaceFiles.length > 1) signals.push('monorepo');
 
   return pick(signals, meta);

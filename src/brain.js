@@ -18,8 +18,9 @@ export function defaultBrainPath() {
 export function createVaultStructure(vaultPath, profile, answers) {
   const today = todayStr();
 
-  const dirs = [vaultPath, 'Daily', 'Sessions', 'Skills', 'Projects', 'Architecture']
-    .map((d, i) => i === 0 ? d : join(vaultPath, d));
+  const dirs = [vaultPath, 'Daily', 'Sessions', 'Skills', 'Projects', 'Architecture'].map((d, i) =>
+    i === 0 ? d : join(vaultPath, d),
+  );
   for (const d of dirs) {
     if (!existsSync(d)) mkdirSync(d, { recursive: true });
   }
@@ -38,7 +39,10 @@ export function createVaultStructure(vaultPath, profile, answers) {
 
   // Project notes for each detected repo
   for (const project of (profile?.projects || []).slice(0, 10)) {
-    writeIfMissing(join(vaultPath, 'Projects', `${slug(project.name)}.md`), buildProjectNote(project));
+    writeIfMissing(
+      join(vaultPath, 'Projects', `${slug(project.name)}.md`),
+      buildProjectNote(project),
+    );
   }
 
   // AI agents setup note (always)
@@ -59,22 +63,28 @@ function buildHome(profile, answers, today) {
   const projects = profile?.projects || [];
 
   const projectRows = projects.length
-    ? projects.map(p =>
-        `| [[Projects/${slug(p.name)}\\|${p.name}]] | ${p.label} | ${relativeAge(p.lastActive)} |`
-      ).join('\n')
+    ? projects
+        .map(
+          (p) =>
+            `| [[Projects/${slug(p.name)}\\|${p.name}]] | ${p.label} | ${relativeAge(p.lastActive)} |`,
+        )
+        .join('\n')
     : '| *No projects detected — add yours below* | | |';
 
   const stackStr = mergeUnique(languages, frameworks.slice(0, 4)).join(' · ') || 'Fill in [[Me]]';
   const aiStr = aiTools.join(', ') || 'Fill in [[Me]]';
 
   const skillLinks = [
-    ...mergeUnique([], frameworks.slice(0, 6)).map(fw => `- [[Skills/${fwSlug(fw)}]]`),
+    ...mergeUnique([], frameworks.slice(0, 6)).map((fw) => `- [[Skills/${fwSlug(fw)}]]`),
     '- [[Skills/AIAgents]]',
     '- [[Workflow]]',
   ].join('\n');
 
   const topicsBlock = profile?.claudeTopics?.length
-    ? `\n## From Your Claude History\n\n${profile.claudeTopics.slice(0, 8).map(t => `- ${t}`).join('\n')}\n`
+    ? `\n## From Your Claude History\n\n${profile.claudeTopics
+        .slice(0, 8)
+        .map((t) => `- ${t}`)
+        .join('\n')}\n`
     : '';
 
   return `# ${name} Agent Brain
@@ -123,8 +133,10 @@ function buildMe(profile, answers) {
   const languages = mergeUnique(profile?.languages, answers?.languages);
   const frameworks = mergeUnique(profile?.frameworks, answers?.frameworks);
   const aiTools = profile?.aiTools || [];
-  const pm = answers?.packageManager ||
-    profile?.projects?.find(p => p.packageManager !== 'npm')?.packageManager || 'npm';
+  const pm =
+    answers?.packageManager ||
+    profile?.projects?.find((p) => p.packageManager !== 'npm')?.packageManager ||
+    'npm';
   const projects = profile?.projects || [];
 
   return `# About Me
@@ -142,9 +154,17 @@ function buildMe(profile, answers) {
 
 ## My Projects
 
-${projects.length
-  ? projects.slice(0, 6).map(p => `- [[Projects/${slug(p.name)}|${p.name}]] — ${p.label}, last active ${relativeAge(p.lastActive)}`).join('\n')
-  : '- (detected none — add your projects here)'}
+${
+  projects.length
+    ? projects
+        .slice(0, 6)
+        .map(
+          (p) =>
+            `- [[Projects/${slug(p.name)}|${p.name}]] — ${p.label}, last active ${relativeAge(p.lastActive)}`,
+        )
+        .join('\n')
+    : '- (detected none — add your projects here)'
+}
 
 ## Background
 
@@ -174,7 +194,8 @@ ${answers?.currentWork || '(fill in — one sentence about your current project)
 
 function buildWorkflow(profile, answers) {
   const style = answers?.style || 'Pragmatic — whatever gets the job done cleanly';
-  const agentRules = answers?.agentRules || 'Finish tasks completely — verify before reporting done';
+  const agentRules =
+    answers?.agentRules || 'Finish tasks completely — verify before reporting done';
 
   return `# My Workflow
 
@@ -240,11 +261,19 @@ function buildDaily(profile, answers, today) {
   const languages = mergeUnique(profile?.languages, answers?.languages);
   const topics = profile?.claudeTopics || [];
 
-  const projectLines = projects.slice(0, 5)
-    .map(p => `  - [[Projects/${slug(p.name)}|${p.name}]] — ${p.label}, last active ${relativeAge(p.lastActive)}`)
-    .join('\n') || '  - (no recent projects detected)';
+  const projectLines =
+    projects
+      .slice(0, 5)
+      .map(
+        (p) =>
+          `  - [[Projects/${slug(p.name)}|${p.name}]] — ${p.label}, last active ${relativeAge(p.lastActive)}`,
+      )
+      .join('\n') || '  - (no recent projects detected)';
 
-  const topicLines = topics.slice(0, 5).map(t => `  - ${t}`).join('\n');
+  const topicLines = topics
+    .slice(0, 5)
+    .map((t) => `  - ${t}`)
+    .join('\n');
 
   return `# ${today}${name}
 
@@ -269,7 +298,10 @@ ${projects.length ? `**Your projects:**\n${projectLines}\n` : ''}${topics.length
 
 - [[Me]]
 - [[Workflow]]
-${projects.slice(0, 4).map(p => `- [[Projects/${slug(p.name)}]]`).join('\n')}
+${projects
+  .slice(0, 4)
+  .map((p) => `- [[Projects/${slug(p.name)}]]`)
+  .join('\n')}
 `;
 }
 
@@ -313,7 +345,7 @@ lib/
 
 (add your own patterns and gotchas here)
 `,
-    'React': `# React
+    React: `# React
 
 ## Rules I Follow
 
@@ -336,7 +368,7 @@ const { mutate } = useMutation({ mutationFn: updateUser, onSuccess: () => queryC
 
 (add your patterns here)
 `,
-    'FastAPI': `# FastAPI
+    FastAPI: `# FastAPI
 
 ## Architecture
 
@@ -356,7 +388,7 @@ Never call the database in a route handler. Routes parse requests and call servi
 
 (add your patterns here)
 `,
-    'TypeScript': `# TypeScript
+    TypeScript: `# TypeScript
 
 ## My Rules
 
@@ -380,7 +412,7 @@ function assertNever(x: never): never { throw new Error('Unhandled: ' + x); }
 
 (add your patterns here)
 `,
-    'Python': `# Python
+    Python: `# Python
 
 ## My Rules
 
@@ -395,7 +427,7 @@ function assertNever(x: never): never { throw new Error('Unhandled: ' + x); }
 
 (add your patterns here)
 `,
-    'Go': `# Go
+    Go: `# Go
 
 ## My Rules
 
@@ -422,7 +454,7 @@ function assertNever(x: never): never { throw new Error('Unhandled: ' + x); }
 
 (add your patterns here)
 `,
-    'Prisma': `# Prisma
+    Prisma: `# Prisma
 
 ## Patterns
 
@@ -437,7 +469,9 @@ function assertNever(x: never): never { throw new Error('Unhandled: ' + x); }
 `,
   };
 
-  return content[framework] || `# ${framework}
+  return (
+    content[framework] ||
+    `# ${framework}
 
 ## My Patterns
 
@@ -450,14 +484,28 @@ function assertNever(x: never): never { throw new Error('Unhandled: ' + x); }
 ## My Notes
 
 (add your notes here)
-`;
+`
+  );
 }
 
 // ─── Project notes ────────────────────────────────────────────────────────────
 
 function buildProjectNote(project) {
   const extras = project.signals
-    .filter(s => !['next','react','vite','python','go','rust','typescript','node-cli','node-server'].includes(s))
+    .filter(
+      (s) =>
+        ![
+          'next',
+          'react',
+          'vite',
+          'python',
+          'go',
+          'rust',
+          'typescript',
+          'node-cli',
+          'node-server',
+        ].includes(s),
+    )
     .join(', ');
 
   return `# ${project.name}
@@ -515,7 +563,7 @@ function buildAgentNote(profile) {
 
 ## My Tools
 
-${tools.length ? tools.map(t => `- ${t}`).join('\n') : '- (add your tools: Claude Code, Cursor, Gemini CLI, etc.)'}
+${tools.length ? tools.map((t) => `- ${t}`).join('\n') : '- (add your tools: Claude Code, Cursor, Gemini CLI, etc.)'}
 
 ## Config Files
 
@@ -592,7 +640,8 @@ function buildArchNote(answers) {
 function obsidianConfigPath() {
   const p = osPlatform();
   const home = homedir();
-  if (p === 'darwin') return join(home, 'Library', 'Application Support', 'obsidian', 'obsidian.json');
+  if (p === 'darwin')
+    return join(home, 'Library', 'Application Support', 'obsidian', 'obsidian.json');
   if (p === 'win32') return join(home, 'AppData', 'Roaming', 'obsidian', 'obsidian.json');
   return join(home, '.config', 'obsidian', 'obsidian.json');
 }
@@ -603,19 +652,30 @@ export function registerInObsidian(vaultPath) {
   if (!cfgPath || !existsSync(cfgPath)) return { registered: false, warning: 'Obsidian not found' };
 
   let cfg;
-  try { cfg = JSON.parse(readFileSync(cfgPath, 'utf8')); }
-  catch { return { registered: false, warning: 'Could not parse obsidian.json' }; }
+  try {
+    cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
+  } catch {
+    return { registered: false, warning: 'Could not parse obsidian.json' };
+  }
 
   const vaults = cfg.vaults || {};
   for (const v of Object.values(vaults)) {
-    if ((v.path || '').replace(/\\/g, '/') === vaultPath.replace(/\\/g, '/')) return { registered: true };
+    if ((v.path || '').replace(/\\/g, '/') === vaultPath.replace(/\\/g, '/'))
+      return { registered: true };
   }
 
   const id = Array.from({ length: 16 }, () => Math.floor(Math.random() * 16).toString(16)).join('');
   cfg.vaults = { ...cfg.vaults, [id]: { path: vaultPath, ts: Date.now() } };
 
-  try { writeFileSync(cfgPath, JSON.stringify(cfg, null, '\t'), 'utf8'); return { registered: true }; }
-  catch { return { registered: false, warning: 'Could not write obsidian.json — add vault manually in Obsidian' }; }
+  try {
+    writeFileSync(cfgPath, JSON.stringify(cfg, null, '\t'), 'utf8');
+    return { registered: true };
+  } catch {
+    return {
+      registered: false,
+      warning: 'Could not write obsidian.json — add vault manually in Obsidian',
+    };
+  }
 }
 
 /** @param {{ path?: string, name?: string, register?: boolean }} opts */
@@ -624,16 +684,22 @@ export async function runBrain(opts = {}) {
   const already = existsSync(join(vaultPath, 'Home.md'));
   console.log(chalk.gray(`Brain vault: ${vaultPath}\n`));
   createVaultStructure(vaultPath, undefined, undefined);
-  console.log(already
-    ? chalk.green(`✓ Brain vault already exists — structure verified`)
-    : chalk.green(`✓ Brain vault created: ${vaultPath}`)
+  console.log(
+    already
+      ? chalk.green(`✓ Brain vault already exists — structure verified`)
+      : chalk.green(`✓ Brain vault created: ${vaultPath}`),
   );
   if (opts.register) {
     const r = registerInObsidian(vaultPath);
-    r.registered ? console.log(chalk.green(`✓ Registered in Obsidian`)) : console.log(chalk.yellow(`⚠ ${r.warning}`));
+    r.registered
+      ? console.log(chalk.green(`✓ Registered in Obsidian`))
+      : console.log(chalk.yellow(`⚠ ${r.warning}`));
   }
   console.log('');
-  console.log(chalk.cyan('Open in Obsidian: ') + chalk.gray(`Obsidian → "Open folder as vault" → ${vaultPath}`));
+  console.log(
+    chalk.cyan('Open in Obsidian: ') +
+      chalk.gray(`Obsidian → "Open folder as vault" → ${vaultPath}`),
+  );
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -647,7 +713,10 @@ function todayStr() {
 }
 
 function slug(name) {
-  return name.replace(/[^a-zA-Z0-9-_]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return name
+    .replace(/[^a-zA-Z0-9-_]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 function fwSlug(fw) {

@@ -58,6 +58,17 @@ node bin/ai-brain.js --dry-run   # preview without writing files
 node bin/ai-brain.js scan        # see what gets detected in the current dir
 ```
 
+## Before opening a PR
+
+```bash
+npm run format     # autoformat with Prettier
+npm run lint       # ESLint — fail on errors, warn on unused vars
+npm test           # Node's built-in test runner against src/__tests__/
+```
+
+CI runs the same three checks against Node 18, 20, and 22 on every PR
+(see `.github/workflows/ci.yml`).
+
 ## Guidelines
 
 - Keep it zero-config. Auto-detect; never require manual JSON editing.
