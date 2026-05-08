@@ -3,7 +3,7 @@
  * Onboarding interview — fills in the gaps when auto-detection can't find enough.
  * Asks a tight set of high-signal questions. Takes ~60 seconds.
  */
-import { input, select, checkbox, confirm } from '@inquirer/prompts';
+import { input, select, checkbox } from '@inquirer/prompts';
 import chalk from 'chalk';
 
 /**

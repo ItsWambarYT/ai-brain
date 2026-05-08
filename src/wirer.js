@@ -3,10 +3,13 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { homedir } from 'os';
 
+import { loadAgents, writeAgentFile } from './agents-registry.js';
+
 // ─── Brain snippet (injected into every agent config) ──────────────────────
 
-/** @param {string} vaultPath @returns {string} */
-function brainSnippet(vaultPath) {
+/** Exported so external modules (custom-agent writer, doctor) can re-use it.
+ * @param {string} vaultPath @returns {string} */
+export function brainSnippet(vaultPath) {
   const vp = vaultPath.replace(/\\/g, '/');
   return `## Brain Vault — READ FIRST
 
@@ -37,38 +40,32 @@ New day format:
 /** @param {string} vaultPath @returns {{ action: string, path: string }} */
 export function wireGlobalClaude(vaultPath) {
   const p = join(homedir(), '.claude', 'CLAUDE.md');
-  const snippet = brainSnippet(vaultPath);
-  return writeGlobalConfig(p, 'Claude — Global Instructions', snippet);
+  return writeGlobalBlock(p, 'Claude — Global Instructions', brainSnippet(vaultPath));
 }
 
-/** @param {string} vaultPath @returns {string} */
+/** @param {string} vaultPath @returns {{ action: string, path: string }} */
 export function generateGeminiMd(vaultPath) {
-  const dir = join(homedir(), '.gemini');
-  const p = join(dir, 'GEMINI.md');
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-
-  const vp = vaultPath.replace(/\\/g, '/');
-  const content = `# Gemini — Global Instructions
-
-## ${brainSnippet(vaultPath)}
+  const p = join(homedir(), '.gemini', 'GEMINI.md');
+  const body = `${brainSnippet(vaultPath)}
 ## Behavior
 
 - Direct, no filler. Finish tasks completely. Verify before reporting done.
 - Internal actions (files, code): proceed. External (email, posts, deploys): confirm first.
 - Never stop at findings — apply the fix and verify it worked.
 `;
-  writeFileSync(p, content, 'utf8');
-  return p;
+  return writeGlobalBlock(p, 'Gemini — Global Instructions', body);
 }
 
-/** @param {string} vaultPath @returns {string} */
+/** @param {string} vaultPath @returns {{ action: string, path: string }} */
 export function generateContinueMd(vaultPath) {
-  const dir = join(homedir(), '.continue');
-  const p = join(dir, 'config.md');
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  const content = `# Continue — Global Instructions\n\n${brainSnippet(vaultPath)}\n## Behavior\n\n- Finish tasks completely before reporting done.\n- Apply fixes and verify they work.\n`;
-  if (!existsSync(p)) writeFileSync(p, content, 'utf8');
-  return p;
+  const p = join(homedir(), '.continue', 'config.md');
+  const body = `${brainSnippet(vaultPath)}
+## Behavior
+
+- Finish tasks completely before reporting done.
+- Apply fixes and verify they work.
+`;
+  return writeGlobalBlock(p, 'Continue — Global Instructions', body);
 }
 
 // ─── Project-level agent config writers ────────────────────────────────────
@@ -133,6 +130,20 @@ export function generateAllProjectConfigs(projectDir, claudeMdContent, vaultPath
     results.push({ file: '.aider.conf.yml', created: false });
   }
 
+  // Custom agents from ~/.config/ai-brain/agents.json — anything the user
+  // has registered with `ai-brain add-agent`. Lets ai-brain wire ANY tool
+  // that reads a markdown / config file, not just the built-in list.
+  const snippet = brainSnippet(vaultPath);
+  for (const agent of loadAgents()) {
+    const { file, action, scope } = writeAgentFile(agent, projectDir, claudeMdContent, snippet);
+    results.push({
+      file: scope === 'global' ? file : agent.file,
+      created: action === 'created',
+      custom: true,
+      name: agent.name,
+    });
+  }
+
   return results;
 }
 
@@ -178,28 +189,44 @@ See \`CLAUDE.md\` in this directory for full project-specific context and coding
 
 // ─── Helpers ───────────────────────────────────────────────────────────────
 
+const AI_BRAIN_BEGIN = '<!-- ai-brain:begin -->';
+const AI_BRAIN_END = '<!-- ai-brain:end -->';
+
 /**
+ * Write or update an ai-brain managed block in a global agent config file.
+ *
+ *  - File missing → create with `# title` + the fenced ai-brain block
+ *  - File has the block already → replace ONLY the block content (preserve everything else)
+ *  - File exists, no block → append the block (preserve all existing content)
+ *
+ * Fixes the prior bug where Gemini's existing GEMINI.md was overwritten —
+ * we now own only the marked region.
+ *
  * @param {string} filePath
- * @param {string} title
- * @param {string} snippet
- * @returns {{ action: string, path: string }}
+ * @param {string} title  Top-of-file heading used when creating from scratch
+ * @param {string} body   Markdown content to put inside the managed block
+ * @returns {{ action: 'created' | 'updated' | 'appended', path: string }}
  */
-function writeGlobalConfig(filePath, title, snippet) {
+function writeGlobalBlock(filePath, title, body) {
+  mkdirSync(dirname(filePath), { recursive: true });
+  const block = `${AI_BRAIN_BEGIN}\n${body.trim()}\n${AI_BRAIN_END}`;
+
   if (!existsSync(filePath)) {
-    mkdirSync(dirname(filePath), { recursive: true });
-    writeFileSync(filePath, `# ${title}\n\n${snippet}`, 'utf8');
+    writeFileSync(filePath, `# ${title}\n\n${block}\n`, 'utf8');
     return { action: 'created', path: filePath };
   }
 
-  const content = readFileSync(filePath, 'utf8');
-  if (
-    content.includes('Brain Vault') ||
-    content.includes('AgentBrain') ||
-    content.includes('brain vault')
-  ) {
-    return { action: 'already_wired', path: filePath };
+  const existing = readFileSync(filePath, 'utf8');
+  const beginIdx = existing.indexOf(AI_BRAIN_BEGIN);
+  const endIdx = existing.indexOf(AI_BRAIN_END);
+  if (beginIdx !== -1 && endIdx !== -1 && endIdx > beginIdx) {
+    const before = existing.slice(0, beginIdx);
+    const after = existing.slice(endIdx + AI_BRAIN_END.length);
+    writeFileSync(filePath, `${before}${block}${after}`, 'utf8');
+    return { action: 'updated', path: filePath };
   }
 
-  writeFileSync(filePath, content + '\n\n' + snippet, 'utf8');
+  const sep = existing.endsWith('\n') ? '\n' : '\n\n';
+  writeFileSync(filePath, `${existing}${sep}${block}\n`, 'utf8');
   return { action: 'appended', path: filePath };
 }

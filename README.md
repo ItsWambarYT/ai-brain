@@ -177,7 +177,36 @@ npx ai-brain brain
 
 # Rescan repos and refresh vault with new projects
 npx ai-brain update
+
+# Diagnose: vault health, agent wiring, project files, with fixes
+npx ai-brain doctor
+
+# Register any AI tool not in the built-in list
+npx ai-brain add-agent <Name> --file <path>      # e.g. ai-brain add-agent Roo --file .roorules
+npx ai-brain list-agents                          # show registered custom agents
+npx ai-brain remove-agent <Name>                  # un-register
 ```
+
+---
+
+## Works With Any AI Agent
+
+Built-in support: **Claude Code · Gemini CLI · Cursor · Windsurf · GitHub Copilot · Cline · Aider · Continue · Codex CLI**.
+
+For anything else — internal company tools, new agents, forks — register them once with `add-agent` and `init` will write their config files alongside the built-ins:
+
+```bash
+# Tell ai-brain about a tool that reads .roorules in each project
+npx ai-brain add-agent Roo --file .roorules
+
+# Tool that reads a global file in your home directory
+npx ai-brain add-agent CompanyBot --file ~/.companybot/instructions.md
+
+# Tool that wants raw rules, not markdown headings
+npx ai-brain add-agent Aider2 --file .aider2-conventions --format rules
+```
+
+The registry lives at `~/.config/ai-brain/agents.json` (plain JSON — edit by hand if you prefer).
 
 ---
 
@@ -194,6 +223,7 @@ Auto-detected. No config needed.
 | Node.js CLI | `bin` in package.json | Unix CLI conventions + exit codes + testing |
 | TypeScript Library | `tsconfig.json`, no framework | Dual CJS/ESM build + API design rules |
 | Go | `go.mod` | Error wrapping + context propagation + testing |
+| Rust | `Cargo.toml` | thiserror/anyhow patterns + clippy rules + tokio conventions |
 | Anything else | fallback | Universal coding standards |
 
 Sub-dependencies also detected: tRPC, Prisma, Drizzle, NextAuth, SQLAlchemy, Alembic, Celery, Zustand, Tailwind, and more.
@@ -257,22 +287,27 @@ to verify this for yourself.
 ### What it writes
 
 - `~/AgentBrain/` — the generated brain vault (markdown notes you edit).
-  Path is configurable via `--brain-path`; nothing is written outside it.
+  Path is configurable via `--brain <path>`; nothing is written outside it.
 - `CLAUDE.md`, `AGENTS.md`, `.cursorrules`, `.windsurfrules`,
-  `.continue/config.json`, `GEMINI.md`, etc. in the **current project
-  directory only** — and only the ones you opt in to during the interactive
-  setup. With `--no-brain` or `--dry-run` nothing is written.
-- A one-line entry into `~/.claude/CLAUDE.md` (or your global
-  `~/.gemini/GEMINI.md`) that points agents at the brain vault. This is
-  appended, never overwritten — and only if the matching agent is detected.
+  `.github/copilot-instructions.md`, `.clinerules`, `.aider.conf.yml` in the
+  **current project directory only** — only files that don't already exist
+  are written (existing ones are preserved). Skipped entirely with
+  `--no-agents`, `--no-brain`, or `--dry-run`.
+- A managed block (delimited by `<!-- ai-brain:begin -->` /
+  `<!-- ai-brain:end -->`) in `~/.claude/CLAUDE.md`, `~/.gemini/GEMINI.md`,
+  and `~/.continue/config.md` that points agents at the brain vault. The
+  block is created on first run and updated in place on subsequent runs,
+  never overwriting other content in those files. Skipped with `--no-brain`
+  or `--no-gemini`.
 
 ### Removing everything
 
 ```bash
 rm -rf ~/AgentBrain                    # the vault
-rm  CLAUDE.md AGENTS.md .cursorrules   # per-project configs you don't want
-# (the global CLAUDE.md / GEMINI.md entries are clearly fenced —
-#  remove the `<!-- ai-brain -->` block by hand if you no longer want them)
+rm CLAUDE.md AGENTS.md .cursorrules    # per-project configs you don't want
+# Global agent configs: delete the block bounded by
+#   <!-- ai-brain:begin --> ... <!-- ai-brain:end -->
+# in ~/.claude/CLAUDE.md / ~/.gemini/GEMINI.md / ~/.continue/config.md
 ```
 
 ---

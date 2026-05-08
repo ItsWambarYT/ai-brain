@@ -7,7 +7,13 @@ import ora from 'ora';
 import { input, confirm, select } from '@inquirer/prompts';
 import { scan } from './scanner.js';
 import { buildClaudeMd } from './generator.js';
-import { defaultBrainPath, createVaultStructure, registerInObsidian } from './brain.js';
+import {
+  defaultBrainPath,
+  createVaultStructure,
+  registerInObsidian,
+  todayStr,
+  buildHome,
+} from './brain.js';
 import {
   wireGlobalClaude,
   generateGeminiMd,
@@ -166,8 +172,10 @@ export async function runSetup(opts = {}) {
     console.log(chalk.yellow('[dry-run] Would create personalized brain vault at: ' + brainPath));
   }
 
-  // Step 5: Gemini + Continue
-  let doGemini = opts.gemini !== false;
+  // Step 5: Gemini + Continue — gated on setupBrain since these point at the
+  // vault. Without this gate, --no-brain still wired Gemini/Continue at a
+  // path that was never created.
+  let doGemini = opts.gemini !== false && setupBrain;
   if (!autoYes && doGemini && opts.gemini === undefined) {
     doGemini = await confirm({
       message: 'Wire ~/.gemini/GEMINI.md for Gemini CLI?',
@@ -175,13 +183,23 @@ export async function runSetup(opts = {}) {
     });
   }
   if (doGemini && !isDryRun) {
-    generateGeminiMd(brainPath);
-    console.log(chalk.green('✓ ~/.gemini/GEMINI.md'));
+    const r = generateGeminiMd(brainPath);
+    if (r.action === 'created') console.log(chalk.green('✓ ~/.gemini/GEMINI.md'));
+    else if (r.action === 'updated')
+      console.log(chalk.green('✓ ~/.gemini/GEMINI.md (block updated)'));
+    else if (r.action === 'appended')
+      console.log(chalk.green('✓ ~/.gemini/GEMINI.md (block appended)'));
   }
-  if (!isDryRun && setupBrain) generateContinueMd(brainPath);
+  if (!isDryRun && setupBrain) {
+    const r = generateContinueMd(brainPath);
+    if (r.action === 'created') console.log(chalk.green('✓ ~/.continue/config.md'));
+    else if (r.action === 'updated')
+      console.log(chalk.green('✓ ~/.continue/config.md (block updated)'));
+  }
 
-  // Step 6: Project agent configs
-  let doAgents = opts.agents !== false;
+  // Step 6: Project agent configs — also gated on setupBrain since the agent
+  // configs embed the brain path and instructions to read the vault.
+  let doAgents = opts.agents !== false && setupBrain;
   if (!autoYes && doAgents && opts.agents === undefined) {
     doAgents = await confirm({
       message:
@@ -242,15 +260,38 @@ export async function runUpdate(opts = {}) {
     return;
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  // Walk the full structure builder. createVaultStructure() uses writeIfMissing
+  // for every file, so this is safe — only NEW projects/skills/dirs get added.
+  // Pre-existing files (your edited Me.md, Workflow.md, project notes) are
+  // left untouched.
+  try {
+    createVaultStructure(brainPath, profile, undefined);
+  } catch (err) {
+    console.log(chalk.yellow('  Could not refresh vault structure: ' + (err?.message || err)));
+  }
+
+  // Home.md is the index — always refresh it so the project list / AI tools /
+  // languages reflect today's state. (This was the missing piece — the prior
+  // update only appended a daily-note line.)
+  const homePath = join(brainPath, 'Home.md');
+  try {
+    writeFileSync(homePath, buildHome(profile, undefined, todayStr()), 'utf8');
+  } catch {
+    /* ignore */
+  }
+
+  // Append a single update entry to today's daily note.
+  const today = todayStr();
   const dailyPath = join(brainPath, 'Daily', today + '.md');
+  const skillCount = (profile.frameworks || []).length;
   const entry =
     '\n### ai-brain update\n\nRescanned: ' +
     profile.projects.length +
-    ' projects. AI tools: ' +
+    ' projects · ' +
+    skillCount +
+    ' frameworks. AI tools: ' +
     (profile.aiTools.join(', ') || 'none') +
     '.\n';
-
   try {
     if (existsSync(dailyPath)) {
       writeFileSync(dailyPath, readFileSync(dailyPath, 'utf8') + entry, 'utf8');
@@ -262,9 +303,12 @@ export async function runUpdate(opts = {}) {
       );
     }
   } catch {
-    /* ignore write errors */
+    /* ignore */
   }
 
-  console.log(chalk.green('  Brain vault updated'));
+  console.log(
+    chalk.green('  Brain vault updated — ') +
+      chalk.gray(profile.projects.length + ' projects · ' + skillCount + ' skills'),
+  );
   console.log('');
 }

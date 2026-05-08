@@ -1,6 +1,6 @@
 #!/bin/bash
-# claude-vault — one-liner setup for Unix/macOS/Linux
-# Usage: curl -fsSL https://raw.githubusercontent.com/ItsWambarYT/claude-vault/main/setup.sh | bash
+# ai-brain — one-liner setup for Unix/macOS/Linux
+# Usage: curl -fsSL https://raw.githubusercontent.com/ItsWambarYT/ai-brain/main/setup.sh | bash
 
 set -e
 
@@ -18,5 +18,5 @@ if [ "$NODE_VERSION" -lt 18 ]; then
   exit 1
 fi
 
-echo "Running claude-vault..."
-npx claude-vault --yes
+echo "Running ai-brain..."
+npx ai-brain --yes

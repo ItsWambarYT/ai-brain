@@ -11,7 +11,7 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'fs';
 import { join, basename, extname, resolve } from 'path';
 import { homedir } from 'os';
-import { execSync } from 'child_process';
+import { execSync, execFileSync } from 'child_process';
 import fg from 'fast-glob';
 
 const HOME = homedir();
@@ -109,10 +109,11 @@ async function scanGitRepos() {
 
 /** @param {string} repoPath @returns {Promise<ProjectInfo|null>} */
 async function analyzeRepo(repoPath) {
-  // Get last commit date
+  // Get last commit date — execFileSync passes repoPath as an argv element so
+  // shell quoting can't bite us on paths with spaces / quotes / special chars.
   let lastActive = '';
   try {
-    lastActive = execSync(`git -C "${repoPath}" log -1 --format=%ci 2>/dev/null`, {
+    lastActive = execFileSync('git', ['-C', repoPath, 'log', '-1', '--format=%ci'], {
       timeout: 3000,
       stdio: ['pipe', 'pipe', 'pipe'],
     })

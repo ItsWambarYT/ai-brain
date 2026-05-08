@@ -1,5 +1,5 @@
-# claude-vault — one-liner setup for Windows PowerShell
-# Usage: irm https://raw.githubusercontent.com/ItsWambarYT/claude-vault/main/setup.ps1 | iex
+# ai-brain — one-liner setup for Windows PowerShell
+# Usage: irm https://raw.githubusercontent.com/ItsWambarYT/ai-brain/main/setup.ps1 | iex
 
 $ErrorActionPreference = "Stop"
 
@@ -17,5 +17,5 @@ try {
     exit 1
 }
 
-Write-Host "Running claude-vault..." -ForegroundColor Cyan
-npx claude-vault --yes
+Write-Host "Running ai-brain..." -ForegroundColor Cyan
+npx ai-brain --yes

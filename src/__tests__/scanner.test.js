@@ -108,10 +108,11 @@ test('detects Go module', async () => {
   assert.ok(result.detected.includes('go-web'));
 });
 
-test('detects Rust (currently maps to generic)', async () => {
+test('detects Rust', async () => {
   const result = await scanFixture({
     'Cargo.toml': '[package]\nname = "demo"\n\n[dependencies]\naxum = "0.7"\ntokio = "1"\n',
   });
+  assert.equal(result.template, 'rust');
   assert.ok(result.detected.includes('rust'));
   assert.ok(result.detected.includes('rust-web'));
   assert.ok(result.detected.includes('tokio'));

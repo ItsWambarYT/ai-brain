@@ -596,7 +596,7 @@ If you start using a new AI tool, add it here and check if there's a config file
 
 // ─── Architecture note ────────────────────────────────────────────────────────
 
-function buildArchNote(answers) {
+function buildArchNote(_answers) {
   return `# Architecture Overview
 
 > Use this note for high-level system design that every agent should understand at a glance.
@@ -708,9 +708,19 @@ function writeIfMissing(filePath, content) {
   if (!existsSync(filePath)) writeFileSync(filePath, content, 'utf8');
 }
 
+/**
+ * Local-date YYYY-MM-DD. toISOString() returns UTC, which rolls daily notes
+ * to the next day's date hours before midnight in -7 to -10 timezones.
+ */
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
+
+export { todayStr, buildHome };
 
 function slug(name) {
   return name
@@ -725,8 +735,4 @@ function fwSlug(fw) {
 
 function mergeUnique(a, b) {
   return [...new Set([...(a || []), ...(b || [])])];
-}
-
-function currentPlatform() {
-  return osPlatform();
 }

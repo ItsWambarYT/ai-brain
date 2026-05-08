@@ -166,20 +166,39 @@ export async function scan(dir) {
   if (goMod) {
     signals.push('go');
     const modContent = readFileSync(join(dir, 'go.mod'), 'utf8');
-    if (
-      modContent.includes('gin-gonic') ||
-      modContent.includes('echo') ||
-      modContent.includes('fiber')
-    )
+    // Detect specific Go web framework so generator.js can render it in CLAUDE.md.
+    if (modContent.includes('gin-gonic')) {
       signals.push('go-web');
+      meta.framework = 'Gin';
+    } else if (modContent.includes('labstack/echo')) {
+      signals.push('go-web');
+      meta.framework = 'Echo';
+    } else if (modContent.includes('gofiber/fiber')) {
+      signals.push('go-web');
+      meta.framework = 'Fiber';
+    } else if (modContent.includes('go-chi/chi')) {
+      signals.push('go-web');
+      meta.framework = 'Chi';
+    }
     meta.goModule = modContent.split('\n')[0]?.replace('module ', '').trim() || '';
   }
 
   if (cargoToml) {
     signals.push('rust');
     const content = readFileSync(join(dir, 'Cargo.toml'), 'utf8');
-    if (content.includes('actix-web') || content.includes('axum') || content.includes('warp'))
+    if (content.includes('actix-web')) {
       signals.push('rust-web');
+      meta.framework = 'Actix Web';
+    } else if (content.includes('axum')) {
+      signals.push('rust-web');
+      meta.framework = 'Axum';
+    } else if (content.includes('warp')) {
+      signals.push('rust-web');
+      meta.framework = 'Warp';
+    } else if (content.includes('rocket')) {
+      signals.push('rust-web');
+      meta.framework = 'Rocket';
+    }
     if (content.includes('tokio')) signals.push('tokio');
   }
 
@@ -216,6 +235,18 @@ function pick(signals, meta) {
   if (signals.includes('node-cli')) {
     return { template: 'node-cli', label: 'Node.js CLI', detected: signals, meta };
   }
+  // node-server (Express/Fastify/Hono/etc) MUST come before typescript-lib —
+  // a TS-built Node server has both signals, and "Express server" is a more
+  // useful classification than "TS library" for choosing a CLAUDE.md template.
+  if (signals.includes('node-server')) {
+    const ts = signals.includes('typescript') || signals.includes('typescript-lib');
+    return {
+      template: 'node-cli',
+      label: ts ? 'Node.js Server (TypeScript)' : 'Node.js Server',
+      detected: signals,
+      meta,
+    };
+  }
   if (signals.includes('typescript-lib') || signals.includes('typescript')) {
     return { template: 'typescript-lib', label: 'TypeScript Library', detected: signals, meta };
   }
@@ -223,10 +254,7 @@ function pick(signals, meta) {
     return { template: 'go', label: 'Go', detected: signals, meta };
   }
   if (signals.includes('rust')) {
-    return { template: 'generic', label: 'Rust', detected: signals, meta };
-  }
-  if (signals.includes('node-server')) {
-    return { template: 'node-cli', label: 'Node.js Server', detected: signals, meta };
+    return { template: 'rust', label: 'Rust', detected: signals, meta };
   }
   return { template: 'generic', label: 'Generic Project', detected: signals, meta };
 }
