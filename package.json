@@ -1,6 +1,6 @@
 {
   "name": "ai-brain",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Give every AI coding agent a persistent, personalized brain — auto-built from your git repos, Claude history, and project stack. One command.",
   "keywords": [
     "ai",

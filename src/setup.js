@@ -21,6 +21,12 @@ import {
 } from './wirer.js';
 import { buildUserProfile } from './profiler.js';
 import { runOnboarding, shouldRunOnboarding } from './onboarding.js';
+import {
+  detectWireableAgents,
+  planStrategy,
+  chooseStrategy,
+  describePlan,
+} from './brain-strategies.js';
 
 export async function runSetup(opts = {}) {
   const projectDir = resolve(typeof opts.project === 'string' ? opts.project : process.cwd());
@@ -140,60 +146,114 @@ export async function runSetup(opts = {}) {
     }
   }
 
-  if (setupBrain && !isDryRun) {
-    createVaultStructure(brainPath, profile ?? undefined, answers ?? undefined);
-    if (profile?.projects.length) {
-      console.log(chalk.green('✓ Brain vault: ' + brainPath));
+  // ─── Strategy decision (multi-agent) ─────────────────────────────────
+  // When 2+ agents are detected we ask whether to share one vault or fork
+  // per-agent. Single-agent installs skip the prompt entirely (combined).
+  const detected = detectWireableAgents();
+  let strategyMode = (opts.mode || '').toLowerCase();
+  let onlyId = (opts.only || '').toLowerCase();
+  if (setupBrain && detected.length >= 2 && !autoYes && !strategyMode) {
+    const choice = await chooseStrategy(detected);
+    strategyMode = choice.mode;
+    if (choice.onlyId) onlyId = choice.onlyId;
+  }
+  if (!strategyMode) strategyMode = 'combined';
+  if (strategyMode === 'single' && !onlyId) {
+    // --mode single without --only is invalid in non-interactive mode;
+    // fall back to combined to avoid blocking with --yes.
+    if (autoYes) {
+      console.log(chalk.yellow('  --mode single needs --only <agent>; falling back to combined'));
+      strategyMode = 'combined';
+    } else {
+      const choice = await chooseStrategy(detected);
+      strategyMode = choice.mode;
+      onlyId = choice.onlyId || '';
+    }
+  }
+
+  /** @type {import('./brain-strategies.js').StrategyPlan | null} */
+  let plan = null;
+  if (setupBrain && detected.length > 0) {
+    plan = planStrategy({
+      mode: /** @type {any} */ (strategyMode),
+      detected,
+      combinedVaultPath: brainPath,
+      onlyId,
+    });
+    if (plan.mode !== 'combined' || detected.length > 1) {
       console.log(
         chalk.gray(
-          '  Personalized with ' +
-            profile.projects.length +
-            ' projects, ' +
-            profile.frameworks.length +
-            ' skill notes',
+          describePlan(plan)
+            .split('\n')
+            .map((l) => '  ' + l)
+            .join('\n'),
         ),
       );
-    } else {
-      console.log(chalk.green('✓ Brain vault: ' + brainPath));
+    }
+  }
+
+  if (setupBrain && !isDryRun) {
+    // Create each unique vault path once
+    const vaultsToCreate = plan ? plan.vaultPaths : [brainPath];
+    for (const vp of vaultsToCreate) {
+      createVaultStructure(vp, profile ?? undefined, answers ?? undefined);
+      if (profile?.projects.length) {
+        console.log(chalk.green('✓ Brain vault: ' + vp));
+        console.log(
+          chalk.gray(
+            '  Personalized with ' +
+              profile.projects.length +
+              ' projects, ' +
+              profile.frameworks.length +
+              ' skill notes',
+          ),
+        );
+      } else {
+        console.log(chalk.green('✓ Brain vault: ' + vp));
+      }
     }
 
-    const wireResult = wireGlobalClaude(brainPath);
-    if (wireResult.action === 'created')
-      console.log(chalk.green('✓ ~/.claude/CLAUDE.md → wired to brain'));
-    else if (wireResult.action === 'appended')
-      console.log(chalk.green('✓ Global CLAUDE.md wired to brain'));
-    else console.log(chalk.gray('  ~/.claude/CLAUDE.md already wired'));
+    // Wire each agent in the plan to its specific vault
+    if (plan && plan.entries.length) {
+      for (const { agent, vaultPath } of plan.entries) {
+        const r = agent.wire(vaultPath);
+        const tag = r.action === 'skipped' ? chalk.gray : chalk.green;
+        const verb =
+          r.action === 'created'
+            ? 'created'
+            : r.action === 'updated'
+              ? 'block updated'
+              : r.action === 'appended'
+                ? 'block appended'
+                : 'already wired';
+        console.log(tag(`✓ ${agent.label} → ${r.path} (${verb})`));
+      }
+    } else {
+      // No agents detected — still wire Claude globally for first-run users
+      // so installing Claude later picks up the brain without a re-run.
+      const r = wireGlobalClaude(brainPath);
+      if (r.action === 'created')
+        console.log(chalk.green('✓ ~/.claude/CLAUDE.md → wired to brain'));
+      else if (r.action === 'appended')
+        console.log(chalk.green('✓ Global CLAUDE.md wired to brain'));
+      else console.log(chalk.gray('  ~/.claude/CLAUDE.md already wired'));
+    }
 
-    const obsResult = registerInObsidian(brainPath);
+    const obsResult = registerInObsidian(plan ? plan.vaultPaths[0] : brainPath);
     if (obsResult.registered) console.log(chalk.green('✓ Registered in Obsidian'));
-    else console.log(chalk.yellow('  ⚠ Open Obsidian → "Open folder as vault" → ' + brainPath));
+    else
+      console.log(
+        chalk.yellow(
+          '  ⚠ Open Obsidian → "Open folder as vault" → ' + (plan ? plan.vaultPaths[0] : brainPath),
+        ),
+      );
   } else if (setupBrain && isDryRun) {
-    console.log(chalk.yellow('[dry-run] Would create personalized brain vault at: ' + brainPath));
-  }
-
-  // Step 5: Gemini + Continue — gated on setupBrain since these point at the
-  // vault. Without this gate, --no-brain still wired Gemini/Continue at a
-  // path that was never created.
-  let doGemini = opts.gemini !== false && setupBrain;
-  if (!autoYes && doGemini && opts.gemini === undefined) {
-    doGemini = await confirm({
-      message: 'Wire ~/.gemini/GEMINI.md for Gemini CLI?',
-      default: true,
-    });
-  }
-  if (doGemini && !isDryRun) {
-    const r = generateGeminiMd(brainPath);
-    if (r.action === 'created') console.log(chalk.green('✓ ~/.gemini/GEMINI.md'));
-    else if (r.action === 'updated')
-      console.log(chalk.green('✓ ~/.gemini/GEMINI.md (block updated)'));
-    else if (r.action === 'appended')
-      console.log(chalk.green('✓ ~/.gemini/GEMINI.md (block appended)'));
-  }
-  if (!isDryRun && setupBrain) {
-    const r = generateContinueMd(brainPath);
-    if (r.action === 'created') console.log(chalk.green('✓ ~/.continue/config.md'));
-    else if (r.action === 'updated')
-      console.log(chalk.green('✓ ~/.continue/config.md (block updated)'));
+    const list = plan ? plan.vaultPaths : [brainPath];
+    for (const vp of list)
+      console.log(chalk.yellow('[dry-run] Would create personalized brain vault at: ' + vp));
+    if (plan && plan.entries.length)
+      for (const { agent, vaultPath } of plan.entries)
+        console.log(chalk.yellow(`[dry-run] Would wire ${agent.label} → ${vaultPath}`));
   }
 
   // Step 6: Project agent configs — also gated on setupBrain since the agent

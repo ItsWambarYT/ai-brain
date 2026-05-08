@@ -39,6 +39,14 @@ program
   .option('--force', 'Overwrite existing CLAUDE.md without prompting')
   .option('--dry-run', 'Preview what would be generated without writing files')
   .option('-y, --yes', 'Non-interactive: accept all defaults (ideal for AI-driven setup)')
+  .option(
+    '--mode <mode>',
+    'When 2+ AI agents are detected, force a brain layout: ' +
+      'combined (one shared vault, default) | ' +
+      'individual (per-agent vault: ~/ClaudeBrain, ~/GeminiBrain, ~/ContinueBrain) | ' +
+      'single (one vault, only one agent wired — pair with --only)',
+  )
+  .option('--only <agent>', 'With --mode single, the agent id to wire: claude | gemini | continue')
   .action(runSetup);
 
 program

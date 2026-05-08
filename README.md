@@ -189,6 +189,31 @@ npx ai-brain remove-agent <Name>                  # un-register
 
 ---
 
+## Multi-Agent Brain Modes
+
+If two or more AI agents are detected (Claude Code, Gemini CLI, Continue), `ai-brain` asks how you want them set up:
+
+```
+? Detected 2 AI agents (Claude Code + Gemini CLI). How should the brain be set up?
+> Combined — one shared vault every agent reads (recommended)
+  Individual — separate vault per agent (~/ClaudeBrain, ~/GeminiBrain)
+  Single — pick one agent to wire
+```
+
+- **Combined** — every agent reads the same `~/AgentBrain`. Topics, daily notes, and project graph are shared. **Best for solo developers** who want their tools to remember everything together.
+- **Individual** — `~/ClaudeBrain`, `~/GeminiBrain`, `~/ContinueBrain` each get their own vault. Agents stay isolated — useful when you want different agents to have separate "personalities" or histories.
+- **Single** — only one agent gets a vault; the others stay un-wired (even if installed). Useful when you're testing one tool at a time.
+
+Non-interactive equivalents:
+
+```bash
+npx ai-brain --yes                         # combined (default)
+npx ai-brain --yes --mode individual
+npx ai-brain --yes --mode single --only claude
+```
+
+---
+
 ## Works With Any AI Agent
 
 Built-in support: **Claude Code · Gemini CLI · Cursor · Windsurf · GitHub Copilot · Cline · Aider · Continue · Codex CLI**.
